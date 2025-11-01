@@ -11,10 +11,10 @@ const Pricing = () => {
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12">
             <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-primary bg-clip-text text-transparent">
-              Transparent Pricing
+              Simple Credit Pricing
             </h1>
-            <p className="text-muted-foreground text-lg">
-              Pay only for what you use with our credit-based system
+            <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
+              Purchase credits and use them across all AI models. No subscriptions, no hidden fees.
             </p>
           </div>
 
@@ -38,8 +38,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">Premium quality, 1024×1024 resolution</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.04</div>
-                      <div className="text-xs text-muted-foreground">per image</div>
+                      <div className="text-2xl font-bold text-primary">80</div>
+                      <div className="text-xs text-muted-foreground">credits per image</div>
                     </div>
                   </div>
 
@@ -49,8 +49,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">High quality, multiple resolutions</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.04</div>
-                      <div className="text-xs text-muted-foreground">per image</div>
+                      <div className="text-2xl font-bold text-primary">80</div>
+                      <div className="text-xs text-muted-foreground">credits per image</div>
                     </div>
                   </div>
 
@@ -63,8 +63,8 @@ const Pricing = () => {
                       <Badge variant="outline" className="text-xs">Recommended</Badge>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-secondary">$0.02</div>
-                      <div className="text-xs text-muted-foreground">per image</div>
+                      <div className="text-2xl font-bold text-secondary">30</div>
+                      <div className="text-xs text-muted-foreground">credits per image</div>
                     </div>
                   </div>
 
@@ -74,8 +74,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">Standard quality, various models</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.03</div>
-                      <div className="text-xs text-muted-foreground">per image</div>
+                      <div className="text-2xl font-bold text-primary">50</div>
+                      <div className="text-xs text-muted-foreground">credits per image</div>
                     </div>
                   </div>
                 </div>
@@ -101,8 +101,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">720×1280 or 1280×720 resolution</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.10</div>
-                      <div className="text-xs text-muted-foreground">per second</div>
+                      <div className="text-2xl font-bold text-primary">150</div>
+                      <div className="text-xs text-muted-foreground">credits per second</div>
                     </div>
                   </div>
 
@@ -112,8 +112,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">720×1280 or 1280×720 enhanced quality</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.30</div>
-                      <div className="text-xs text-muted-foreground">per second</div>
+                      <div className="text-2xl font-bold text-primary">450</div>
+                      <div className="text-xs text-muted-foreground">credits per second</div>
                     </div>
                   </div>
 
@@ -123,8 +123,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">1024×1792 or 1792×1024 high resolution</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.50</div>
-                      <div className="text-xs text-muted-foreground">per second</div>
+                      <div className="text-2xl font-bold text-primary">750</div>
+                      <div className="text-xs text-muted-foreground">credits per second</div>
                     </div>
                   </div>
 
@@ -134,8 +134,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">High-quality video generation</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.75</div>
-                      <div className="text-xs text-muted-foreground">per second</div>
+                      <div className="text-2xl font-bold text-primary">1000</div>
+                      <div className="text-xs text-muted-foreground">credits per second</div>
                     </div>
                   </div>
 
@@ -145,8 +145,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">Third-party aggregator pricing</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.83</div>
-                      <div className="text-xs text-muted-foreground">per second</div>
+                      <div className="text-2xl font-bold text-primary">1100</div>
+                      <div className="text-xs text-muted-foreground">credits per second</div>
                     </div>
                   </div>
 
@@ -159,8 +159,8 @@ const Pricing = () => {
                       <Badge variant="outline" className="text-xs">Recommended</Badge>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-secondary">$0.18</div>
-                      <div className="text-xs text-muted-foreground">per second</div>
+                      <div className="text-2xl font-bold text-secondary">250</div>
+                      <div className="text-xs text-muted-foreground">credits per second</div>
                     </div>
                   </div>
                 </div>
@@ -186,8 +186,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">Fast image-to-video animation</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.25</div>
-                      <div className="text-xs text-muted-foreground">per second</div>
+                      <div className="text-2xl font-bold text-primary">400</div>
+                      <div className="text-xs text-muted-foreground">credits per second</div>
                     </div>
                   </div>
                 </div>
@@ -213,8 +213,8 @@ const Pricing = () => {
                       <p className="text-sm text-muted-foreground">AI-powered image transformation</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-2xl font-bold text-primary">$0.03</div>
-                      <div className="text-xs text-muted-foreground">per image</div>
+                      <div className="text-2xl font-bold text-primary">50</div>
+                      <div className="text-xs text-muted-foreground">credits per image</div>
                     </div>
                   </div>
                 </div>
@@ -227,10 +227,11 @@ const Pricing = () => {
               <CardTitle className="text-xl">How Credits Work</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 text-sm text-muted-foreground">
-              <p>• Purchase credits in flexible amounts to use across all AI models</p>
+              <p>• <strong>Purchase credits</strong> in flexible amounts to use across all AI models</p>
+              <p>• <strong>1000 credits = $1.00</strong> - Simple and transparent pricing</p>
               <p>• Credits are deducted based on the model and output length/size</p>
-              <p>• Unused credits never expire and can be used anytime</p>
-              <p>• Track your usage and remaining credits in your profile</p>
+              <p>• <strong>Never expire</strong> - Use your credits anytime, no rush</p>
+              <p>• Track your usage and remaining credits in your profile dashboard</p>
             </CardContent>
           </Card>
         </div>
