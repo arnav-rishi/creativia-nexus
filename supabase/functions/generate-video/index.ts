@@ -16,7 +16,11 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const vyroApiKey = Deno.env.get('VYRO_API_KEY') || 'vk-UCRsgoCH1osWLmqB97D4xrmZq3bIWc4c31BO4izm8R9MD';
+    const vyroApiKey = Deno.env.get('VYRO_API_KEY');
+    
+    if (!vyroApiKey) {
+      throw new Error('VYRO_API_KEY is not configured');
+    }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 

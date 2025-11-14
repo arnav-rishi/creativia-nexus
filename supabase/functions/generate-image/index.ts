@@ -46,7 +46,11 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', jobId);
 
-    const vyroApiKey = Deno.env.get('VYRO_API_KEY') || 'vk-UCRsgoCH1osWLmqB97D4xrmZq3bIWc4c31BO4izm8R9MD';
+    const vyroApiKey = Deno.env.get('VYRO_API_KEY');
+    
+    if (!vyroApiKey) {
+      throw new Error('VYRO_API_KEY is not configured');
+    }
     const metadata = job.metadata || {};
     const model = metadata.model || 'realistic';
     const aspectRatio = metadata.aspect_ratio || '1:1';
