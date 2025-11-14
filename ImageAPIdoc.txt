@@ -1,0 +1,107 @@
+API Documentation
+
+The endpoint for Text to Image API is
+POST https://api.vyro.ai/v2/image/generations
+
+Headers
+You need to pass the following headers along with the request.
+Name	Type	Required/Optional	Description	Example
+Authorization	string	Required	Pass your API token as a Bearer token in the Authorization header.	Bearer {{API_TOKEN}}
+Request Body Parameters
+Below are the parameters for multipart/form-data that allow for a high degree of customization when generating videos.
+Name	Type	Required	Description	Example
+prompt	string	Required	The main text description of the image. Use descriptive and detailed language for best results.	"A futuristic cityscape at night with neon lights"
+style	enum	Required	Specifies the style of the generated image. In this case, it'd be anime	"anime"
+aspect_ratio	enum	Optional	Defines the width-to-height ratio of the image. Supported values include "1:1", "16:9", "9:16".	"1:1"
+seed	number	Optional	A random seed for generating the image. This can help in reproducing similar images.	"123456789"
+Example API Call
+Here’s a sample curl request that uses the parameters above:
+curl --location --request POST 'https://api.vyro.ai/v2/image/generations' \
+--header 'Authorization: Bearer {{API_TOKEN}}' \
+--form 'prompt="A futuristic cityscape at night with neon lights"' \
+--form 'style="anime"' \
+--form 'aspect_ratio="1:1"'
+
+Response
+Upon a successful request, the API returns a binary image file which can be directly rendered or saved.
+<image-file>
+
+Error Handling
+This section provides an in-depth explanation of errors encountered while interacting with Imagine’s system. Errors are categorized to help you pinpoint issues and apply effective solutions.
+Error Schema
+In case of any error, the API will return a response in the following JSON format:
+{
+  "status": "error",
+  "code": "<error-code>",
+  "error": "<error-name>",
+  "message": "<detailed-error-description>"
+}
+
+This structure ensures consistency in error handling and provides clear information for debugging and resolution.
+Errors in the Imagine system are grouped into four main categories:
+Authorization Errors
+Validation Errors
+Service Errors
+General Errors
+Each category is explored in detail below.
+Authorization Errors
+Authorization errors relate to user authentication and access privileges. Common errors include:
+Code	Status	Message	Description
+1000	BadRequest (400)	The bearer token is missing from the header.	Ensure you provide a valid bearer token.
+1001	Unauthorized (401)	The bearer token passed is invalid.	Verify your token and try again.
+1002	NotAcceptable (406)	The bearer token has expired.	Refresh your token or obtain a new one.
+1003	BadRequest (400)	Error validating the captcha.	Check the captcha input.
+1004	BadRequest (400)	The captcha is required.	Provide a captcha value.
+1005	Unauthorized (401)	Application could not be validated.	Verify application credentials.
+1006	Unauthorized (401)	Device validation failed.	Check device settings and permissions.
+1007	Unauthorized (401)	Account could not be validated.	Ensure account credentials are correct.
+Validation Errors
+Validation errors occur when submitted data does not meet criteria. Example:
+Code	Status	Message	Description
+1100	BadRequest (400)	The request is invalid.	May involve missing, incorrect, or non-existent style IDs.
+1101	PaymentRequired (402)	Not enough tokens.	Purchase a subscription or top-up tokens.
+Service Errors
+Service errors can arise due to server or connectivity issues:
+Code	Status	Message	Description
+1200	ServiceUnavailable (503)	Service not available.	Linked to SVI or reverse proxy failures.
+1201	ServiceUnavailable (503)	Unable to connect to Redis.	Check Redis service status.
+1202	TooManyRequests (429)	Excessive requests.	Consider rate-limiting strategies.
+1203	ServiceUnavailable (503)	Database connection failed.	Occurs during database querying issues.
+1204	GatewayTimeout (504)	Request timed out.	Retry the request.
+1205	InternalServiceError (500)	Unexpected service response.	May arise during response unmarshaling.
+1206	NotImplemented (503)	Unsupported service.	Service is unavailable.
+General Errors
+General errors are broad error categories covering multiple issues:
+Code	Status	Message	Description
+1300	InternalServerError (500)	Internal server error.	Causes vary. Inspect response details for clues.
+If you face Service Error or General Errors, please reach out to Imagine Support as soon as possible.
+
+text to image 
+
+curl --location --request POST 'https://api.vyro.ai/v2/image/generations' \
+--header 'Authorization: Bearer vk-UCRsgoCH1osWLmqB97D4xrmZq3bIWc4c31BO4izm8R9MD' \
+--form 'prompt="A futuristic cityscape at night with neon lights"' \
+--form 'style="realistic"' \
+--form 'aspect_ratio="1:1"' \
+--form 'seed="5"'
+
+IMAGINE_TOKEN="Bearer vk-UCRsgoCH1osWLmqB97D4xrmZq3bIWc4c31BO4izm8R9MD"
+
+all images style 
+
+Anime — “Generate anime-style images based on text descriptions” (for anime characters/scenes). 
+
+
+Flux Dev — “Create futuristic and experimental designs … perfect for tech and innovation themes.” 
+
+
+Flux Schnell — “Generate unique, abstract images with the Flux Schnell style. Great for futuristic, dynamic, and experimental designs.” 
+
+
+Imagine Turbo — “Fast high-quality AI prototyping. Speed-optimized AI for rapid image generation with high-quality results.” 
+
+
+Realistic — “Generate lifelike images with high attention to detail, ideal for realistic art, landscapes, and portrait generation.” 
+
+
+SDXL 1.0 — “High-resolution detailed vivid AI A powerful model that generates high-resolution, detailed images with sharp lines and vivid color schemes.” 

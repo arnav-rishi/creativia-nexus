@@ -16,7 +16,7 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const vyroApiKey = Deno.env.get('VYRO_API_KEY') || 'vk-UCRsgoCH1osWLmqB97D4xrmZq3bIWc4c31BO4izm8R9MD';
     
     const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -27,7 +27,7 @@ serve(async (req) => {
       throw new Error('Job ID is required');
     }
 
-    console.log('Processing job:', jobId);
+    console.log('Processing video job:', jobId);
 
     // Fetch job details
     const { data: job, error: jobError } = await supabase
@@ -46,97 +46,131 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', jobId);
 
-    const vyroApiKey = Deno.env.get('VYRO_API_KEY') || 'vk-UCRsgoCH1osWLmqB97D4xrmZq3bIWc4c31BO4izm8R9MD';
     const metadata = job.metadata || {};
-    const model = metadata.model || 'realistic';
+    const model = metadata.model || 'kling-1.0-pro';
     const aspectRatio = metadata.aspect_ratio || '1:1';
-    const seed = metadata.seed;
 
-    let imageBlob: Blob;
+    console.log('Generating video with Vyro AI...', { model, aspectRatio, jobType: job.job_type });
 
-    if (job.provider === 'vyro_ai') {
-      console.log('Generating image with Vyro AI...', { model, aspectRatio, seed });
+    // Build form data for Vyro.ai API
+    const formData = new FormData();
+    formData.append('prompt', job.prompt);
+    formData.append('style', model);
+    if (aspectRatio) {
+      formData.append('aspect_ratio', aspectRatio);
+    }
 
-      // Build form data for Vyro.ai API
-      const formData = new FormData();
-      formData.append('prompt', job.prompt);
-      formData.append('style', model);
-      if (aspectRatio) {
-        formData.append('aspect_ratio', aspectRatio);
+    // Handle image-to-video: download and attach image
+    if (job.job_type === 'image_to_video' && job.input_image_url) {
+      console.log('Downloading input image for image-to-video...');
+      const imageResponse = await fetch(job.input_image_url);
+      if (!imageResponse.ok) {
+        throw new Error('Failed to download input image');
       }
-      if (seed) {
-        formData.append('seed', seed.toString());
-      }
+      const imageBlob = await imageResponse.blob();
+      formData.append('image', imageBlob, 'input.jpg');
+    }
 
-      // Generate image using Vyro.ai API
-      const response = await fetch('https://api.vyro.ai/v2/image/generations', {
-        method: 'POST',
+    // Determine endpoint based on job type
+    const endpoint = job.job_type === 'image_to_video' 
+      ? 'https://api.vyro.ai/v2/video/image-to-video'
+      : 'https://api.vyro.ai/v2/video/text-to-video';
+
+    // Generate video using Vyro.ai API
+    const response = await fetch(endpoint, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${vyroApiKey}`,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('Vyro AI video generation error:', error);
+      throw new Error(`Vyro AI video generation failed: ${error}`);
+    }
+
+    const data = await response.json();
+    const videoId = data.id;
+
+    if (!videoId) {
+      throw new Error('No video ID returned from API');
+    }
+
+    console.log('Video generation started, ID:', videoId);
+
+    // Store video ID in job metadata for status polling
+    await supabase
+      .from('jobs')
+      .update({
+        metadata: {
+          ...metadata,
+          vyro_video_id: videoId,
+        },
+      })
+      .eq('id', jobId);
+
+    // Start polling for video status
+    let attempts = 0;
+    const maxAttempts = 120; // 10 minutes max (5 second intervals)
+    let videoUrl: string | null = null;
+    let thumbnailUrl: string | null = null;
+
+    while (attempts < maxAttempts) {
+      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+      attempts++;
+
+      console.log(`Checking video status (attempt ${attempts}/${maxAttempts})...`);
+
+      const statusResponse = await fetch(`https://api.vyro.ai/v2/assets/${videoId}/status`, {
+        method: 'GET',
         headers: {
           'Authorization': `Bearer ${vyroApiKey}`,
         },
-        body: formData,
       });
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('Vyro AI generation error:', error);
-        throw new Error(`Vyro AI generation failed: ${error}`);
+      if (!statusResponse.ok) {
+        console.error('Status check failed:', await statusResponse.text());
+        continue;
       }
 
-      // Vyro.ai returns binary image data
-      imageBlob = await response.blob();
-      console.log('Image generated successfully with Vyro AI');
-    } else {
-      // Lovable AI (legacy support)
-      console.log('Generating image with Lovable AI...');
+      const statusData = await statusResponse.json();
 
-      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-image-preview',
-          messages: [
-            {
-              role: 'user',
-              content: `Generate a high-quality image based on this prompt: ${job.prompt}`,
-            },
-          ],
-          modalities: ['image', 'text'],
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('AI generation error:', error);
-        throw new Error(`AI generation failed: ${error}`);
+      if (statusData.status === 'success' && statusData.video?.status === 'finished') {
+        videoUrl = statusData.video.url?.generation;
+        thumbnailUrl = statusData.video.url?.thumbnail;
+        console.log('Video generation completed!', { videoUrl, thumbnailUrl });
+        break;
+      } else if (statusData.video?.status === 'failed' || statusData.status === 'error') {
+        throw new Error(`Video generation failed: ${statusData.message || 'Unknown error'}`);
       }
 
-      const data = await response.json();
-      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-      if (!imageUrl) {
-        throw new Error('No image generated');
-      }
-
-      // Convert base64 to blob
-      const base64Data = imageUrl.split(',')[1];
-      const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-      imageBlob = new Blob([binaryData], { type: 'image/png' });
-      console.log('Image generated successfully with Lovable AI');
+      console.log(`Video status: ${statusData.video?.status || statusData.status}, continuing to poll...`);
     }
 
-    // Upload the image to storage
-    const fileName = `${job.user_id}/${jobId}_${Date.now()}.png`;
-    const arrayBuffer = await imageBlob.arrayBuffer();
+    if (!videoUrl) {
+      throw new Error('Video generation timed out or failed');
+    }
+
+    // Download the video
+    console.log('Downloading video...');
+    const videoResponse = await fetch(videoUrl);
+    if (!videoResponse.ok) {
+      throw new Error('Failed to download generated video');
+    }
+
+    const videoBlob = await videoResponse.blob();
+
+    // Upload the video to storage
+    const fileName = `${job.user_id}/${jobId}_${Date.now()}.mp4`;
+    const arrayBuffer = await videoBlob.arrayBuffer();
     const uint8Array = new Uint8Array(arrayBuffer);
     
     const { error: uploadError } = await supabase.storage
       .from('generations')
       .upload(fileName, uint8Array, {
-        contentType: imageBlob.type || 'image/png',
+        contentType: 'video/mp4',
       });
 
     if (uploadError) {
@@ -158,7 +192,7 @@ serve(async (req) => {
     // Use signed URL if available, otherwise use public URL
     const finalUrl = signedData?.signedUrl || publicUrl;
 
-    console.log('Image uploaded to storage:', finalUrl);
+    console.log('Video uploaded to storage:', finalUrl);
 
     // Update job with result
     await supabase
@@ -175,14 +209,14 @@ serve(async (req) => {
       .insert({
         user_id: job.user_id,
         job_id: jobId,
-        generation_type: 'image',
+        generation_type: 'video',
         prompt: job.prompt,
         result_url: finalUrl,
         provider: job.provider,
         metadata: { 
-          model: job.provider === 'vyro_ai' ? model : 'google/gemini-2.5-flash-image-preview',
+          model,
           aspect_ratio: aspectRatio,
-          seed: seed || null,
+          thumbnail_url: thumbnailUrl,
         },
       });
 
@@ -212,7 +246,7 @@ serve(async (req) => {
         });
     }
 
-    console.log('Job completed successfully');
+    console.log('Video job completed successfully');
 
     return new Response(
       JSON.stringify({ success: true, resultUrl: finalUrl }),
@@ -246,3 +280,4 @@ serve(async (req) => {
     );
   }
 });
+

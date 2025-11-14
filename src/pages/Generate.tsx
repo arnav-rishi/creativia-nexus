@@ -12,19 +12,71 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2, Image as ImageIcon, Video, Upload, Sparkles } from "lucide-react";
 
+// Image models/styles
+const IMAGE_MODELS = [
+  { value: "anime", label: "Anime" },
+  { value: "realistic", label: "Realistic" },
+  { value: "flux-dev", label: "Flux Dev" },
+  { value: "flux-schnell", label: "Flux Schnell" },
+  { value: "imagine-turbo", label: "Imagine Turbo" },
+  { value: "sdxl-1.0", label: "SDXL 1.0" },
+];
+
+// Video models/styles
+const VIDEO_MODELS = [
+  { value: "kling-1.0-pro", label: "Kling 1.0 Pro" },
+  { value: "kling-1.5-pro", label: "Kling 1.5 Pro" },
+  { value: "kling-1.6-pro", label: "Kling 1.6 Pro" },
+  { value: "kling-1.6-standard", label: "Kling 1.6 Standard" },
+  { value: "fast-svd-lcm", label: "Fast SVD LCM" },
+  { value: "fast-svd", label: "Fast SVD" },
+  { value: "luma-dream-machine-ray-2", label: "Luma Dream Machine Ray 2" },
+  { value: "luma-dream-machine-ray-2-flash", label: "Luma Dream Machine Ray 2 Flash" },
+  { value: "luma-dream-machine", label: "Luma Dream Machine" },
+  { value: "magi", label: "Magi" },
+  { value: "magi-distilled", label: "Magi Distilled" },
+  { value: "minimax-video-01", label: "MiniMax Video 01" },
+  { value: "minimax-video-01-director", label: "MiniMax Video 01 Director" },
+  { value: "minimax-video-01-live", label: "MiniMax Video 01 Live" },
+  { value: "mochi-v1", label: "Mochi V1" },
+  { value: "pika-2.1", label: "Pika 2.1" },
+  { value: "pika-2.2", label: "Pika 2.2" },
+  { value: "pixverse-3.5", label: "Pixverse 3.5" },
+  { value: "veo-2", label: "Veo 2" },
+  { value: "ltx-video-v095", label: "LTX Video V095" },
+];
+
+const ASPECT_RATIOS = [
+  { value: "1:1", label: "1:1 (Square)" },
+  { value: "16:9", label: "16:9 (Landscape)" },
+  { value: "9:16", label: "9:16 (Portrait)" },
+];
+
 const Generate = () => {
   const [user, setUser] = useState<any>(null);
   const [credits, setCredits] = useState(0);
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [mode, setMode] = useState<"text_to_image" | "image_to_image" | "text_to_video" | "image_to_video">("text_to_image");
-  const [provider, setProvider] = useState("lovable_ai");
+  const [provider, setProvider] = useState("vyro_ai");
+  const [model, setModel] = useState("realistic");
+  const [aspectRatio, setAspectRatio] = useState("1:1");
+  const [seed, setSeed] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
   }, []);
+
+  // Reset model when mode changes
+  useEffect(() => {
+    if (mode.includes("image")) {
+      setModel("realistic");
+    } else {
+      setModel("kling-1.0-pro");
+    }
+  }, [mode]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -95,7 +147,7 @@ const Generate = () => {
         inputImageUrl = publicUrl;
       }
 
-      // Create job
+      // Create job with metadata
       const { data: job, error: jobError } = await supabase
         .from("jobs")
         .insert({
@@ -106,15 +158,44 @@ const Generate = () => {
           provider,
           cost_credits: getCreditCost(),
           status: "pending",
+          metadata: {
+            model,
+            aspect_ratio: aspectRatio,
+            seed: seed || null,
+          },
         })
         .select()
         .single();
 
       if (jobError) throw jobError;
 
-      // Only process text-to-image with Lovable AI for now
-      if (mode === "text_to_image" && provider === "lovable_ai") {
-        // Trigger background processing
+      // Trigger appropriate function based on mode
+      if (provider === "vyro_ai") {
+        if (mode === "text_to_image" || mode === "image_to_image") {
+          // Trigger image generation
+          supabase.functions.invoke('generate-image', {
+            body: { jobId: job.id }
+          }).then(({ data, error }) => {
+            if (error) {
+              console.error('Processing error:', error);
+              toast.error("Failed to start image generation");
+            }
+          });
+        } else if (mode === "text_to_video" || mode === "image_to_video") {
+          // Trigger video generation
+          supabase.functions.invoke('generate-video', {
+            body: { jobId: job.id }
+          }).then(({ data, error }) => {
+            if (error) {
+              console.error('Processing error:', error);
+              toast.error("Failed to start video generation");
+            }
+          });
+        }
+        
+        toast.success("Generation started! Check your gallery in a moment.");
+      } else if (provider === "lovable_ai" && mode === "text_to_image") {
+        // Keep support for Lovable AI
         supabase.functions.invoke('generate-image', {
           body: { jobId: job.id }
         }).then(({ data, error }) => {
@@ -230,16 +311,69 @@ const Generate = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="lovable_ai">Lovable AI (Ready to use)</SelectItem>
-                      <SelectItem value="openai" disabled>OpenAI DALL-E (Requires API key)</SelectItem>
-                      <SelectItem value="stability" disabled>Stability AI (Requires API key)</SelectItem>
-                      <SelectItem value="runway" disabled>RunwayML (Requires API key)</SelectItem>
+                      <SelectItem value="vyro_ai">Vyro AI (Image & Video)</SelectItem>
+                      <SelectItem value="lovable_ai">Lovable AI (Image only)</SelectItem>
                     </SelectContent>
                   </Select>
-                  <p className="text-xs text-muted-foreground">
-                    Additional providers available with API keys
-                  </p>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Model/Style</Label>
+                  <Select 
+                    value={model} 
+                    onValueChange={setModel}
+                    disabled={provider === "lovable_ai"}
+                  >
+                    <SelectTrigger className="bg-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(mode.includes("image") ? IMAGE_MODELS : VIDEO_MODELS).map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {provider === "lovable_ai" && (
+                    <p className="text-xs text-muted-foreground">
+                      Model selection not available for Lovable AI
+                    </p>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Aspect Ratio</Label>
+                  <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                    <SelectTrigger className="bg-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ASPECT_RATIOS.map((ratio) => (
+                        <SelectItem key={ratio.value} value={ratio.value}>
+                          {ratio.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {mode.includes("image") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="seed">Seed (Optional)</Label>
+                    <Input
+                      id="seed"
+                      type="number"
+                      placeholder="Leave empty for random"
+                      value={seed}
+                      onChange={(e) => setSeed(e.target.value)}
+                      className="bg-input"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use the same seed to reproduce similar images
+                    </p>
+                  </div>
+                )}
 
                 <div className="flex items-center justify-between pt-4">
                   <div className="text-sm">
