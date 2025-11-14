@@ -194,8 +194,8 @@ const Generate = () => {
         }
         
         toast.success("Generation started! Check your gallery in a moment.");
-      } else if (provider === "lovable_ai" && mode === "text_to_image") {
-        // Keep support for Lovable AI
+      } else if (provider === "studio_ai" && mode === "text_to_image") {
+        // Keep support for Studio AI
         supabase.functions.invoke('generate-image', {
           body: { jobId: job.id }
         }).then(({ data, error }) => {
@@ -312,7 +312,7 @@ const Generate = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="vyro_ai">Vyro AI (Image & Video)</SelectItem>
-                      <SelectItem value="lovable_ai">Lovable AI (Image only)</SelectItem>
+                      <SelectItem value="studio_ai">Studio AI (Image only)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -322,7 +322,7 @@ const Generate = () => {
                   <Select 
                     value={model} 
                     onValueChange={setModel}
-                    disabled={provider === "lovable_ai"}
+                    disabled={provider === "studio_ai"}
                   >
                     <SelectTrigger className="bg-input">
                       <SelectValue />
@@ -335,9 +335,9 @@ const Generate = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  {provider === "lovable_ai" && (
+                  {provider === "studio_ai" && (
                     <p className="text-xs text-muted-foreground">
-                      Model selection not available for Lovable AI
+                      Model selection not available for Studio AI
                     </p>
                   )}
                 </div>
