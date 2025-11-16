@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, Trash2, Clock, CheckCircle2, XCircle, Image as ImageIcon } from "lucide-react";
+import { Loader2, Download, Trash2, Clock, CheckCircle2, XCircle, Image as ImageIcon, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 interface Generation {
@@ -243,49 +243,69 @@ const Gallery = () => {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
+    <div className="min-h-screen bg-background">
       <Navbar credits={credits} />
       
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 space-y-2 animate-slide-up">
-          <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+      {/* Animated Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-40">
+        <div className="absolute top-1/4 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
+        <div className="absolute bottom-1/4 left-0 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '3s' }} />
+      </div>
+
+      <div className="relative container mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="mb-12 space-y-4 text-center">
+          <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-primary via-accent to-secondary bg-clip-text text-transparent">
             Your Gallery
           </h1>
-          <p className="text-muted-foreground">
-            All your AI-generated creations in one place
+          <p className="text-muted-foreground text-xl max-w-2xl mx-auto">
+            All your AI-generated masterpieces in one beautiful collection
           </p>
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <div className="flex flex-col items-center justify-center py-32 space-y-4">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="text-muted-foreground">Loading your creations...</p>
           </div>
         ) : generations.length === 0 ? (
-          <Card className="shadow-card border-border/50 bg-card/80">
-            <CardContent className="flex flex-col items-center justify-center py-20 space-y-4">
-              <ImageIcon className="h-16 w-16 text-muted-foreground" />
-              <p className="text-lg text-muted-foreground">No generations yet</p>
-              <Button onClick={() => navigate("/")} className="bg-gradient-primary">
+          <Card className="shadow-card-hover border-border/50 bg-card/90 backdrop-blur-xl max-w-2xl mx-auto">
+            <CardContent className="flex flex-col items-center justify-center py-20 space-y-6">
+              <div className="h-24 w-24 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow-primary">
+                <ImageIcon className="h-12 w-12 text-white" />
+              </div>
+              <div className="text-center space-y-2">
+                <h3 className="text-2xl font-bold">No creations yet</h3>
+                <p className="text-muted-foreground">Start your creative journey by generating your first masterpiece</p>
+              </div>
+              <Button 
+                onClick={() => navigate("/generate")} 
+                size="lg" 
+                className="gap-2 shadow-glow-primary hover:shadow-glow-accent transition-all hover:scale-105"
+              >
+                <Sparkles className="h-5 w-5" />
                 Start Creating
               </Button>
             </CardContent>
           </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-slide-up">
-            {generations.map((gen) => (
-              <Card key={gen.id} className="group shadow-card border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden hover:shadow-glow transition-shadow">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {generations.map((gen, index) => (
+              <Card 
+                key={gen.id} 
+                className="group shadow-card border-border/50 bg-card/90 backdrop-blur-xl overflow-hidden hover:shadow-card-hover hover:scale-105 transition-all duration-300"
+                style={{ animationDelay: `${index * 50}ms` }}
+              >
                 <div className="aspect-square relative overflow-hidden bg-muted">
                   {gen.generation_type === "image" ? (
                     <img
                       src={gen.displayUrl}
                       alt={gen.prompt}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
                       onError={(e) => {
-                        // Fallback to original URL if signed URL fails
                         if (e.currentTarget.src !== gen.result_url) {
                           e.currentTarget.src = gen.result_url;
                         } else {
-                          // If both fail, show placeholder
                           e.currentTarget.style.display = 'none';
                         }
                       }}
@@ -296,38 +316,47 @@ const Gallery = () => {
                       controls
                       className="w-full h-full object-cover"
                       onError={(e) => {
-                        // Fallback to original URL if signed URL fails
                         if (e.currentTarget.src !== gen.result_url) {
                           e.currentTarget.src = gen.result_url;
                         }
                       }}
                     />
                   )}
-                  <div className="absolute top-2 right-2 flex gap-2">
-                    <Badge variant="secondary" className="bg-card/80 backdrop-blur-sm">
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute top-3 right-3">
+                    <Badge 
+                      variant="secondary" 
+                      className="bg-card/90 backdrop-blur-sm border border-primary/30 shadow-lg"
+                    >
                       {gen.generation_type}
                     </Badge>
                   </div>
                 </div>
-                <CardContent className="p-4 space-y-3">
-                  <p className="text-sm line-clamp-2 text-foreground">{gen.prompt}</p>
+                <CardContent className="p-5 space-y-4">
+                  <p className="text-sm line-clamp-2 text-foreground font-medium leading-relaxed">
+                    {gen.prompt}
+                  </p>
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
-                    <span>{new Date(gen.created_at).toLocaleDateString()}</span>
-                    <span>{gen.provider}</span>
+                    <span className="flex items-center gap-1">
+                      <Clock className="h-3 w-3" />
+                      {new Date(gen.created_at).toLocaleDateString()}
+                    </span>
+                    <span className="font-medium">{gen.provider}</span>
                   </div>
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
+                      className="flex-1 hover:bg-primary/10 hover:border-primary/50 transition-colors"
                       onClick={() => handleDownload(gen.result_url, gen.prompt, gen.generation_type)}
                     >
                       <Download className="h-4 w-4 mr-2" />
                       Download
                     </Button>
                     <Button
-                      variant="destructive"
+                      variant="outline"
                       size="sm"
+                      className="hover:bg-destructive/10 hover:border-destructive/50 hover:text-destructive transition-colors"
                       onClick={() => handleDelete(gen.id)}
                     >
                       <Trash2 className="h-4 w-4" />
