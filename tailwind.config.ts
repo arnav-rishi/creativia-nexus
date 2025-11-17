@@ -47,29 +47,15 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        success: {
-          DEFAULT: "hsl(var(--success))",
-          foreground: "hsl(var(--success-foreground))",
-        },
-        warning: {
-          DEFAULT: "hsl(var(--warning))",
-          foreground: "hsl(var(--warning-foreground))",
-        },
       },
       backgroundImage: {
         'gradient-primary': 'var(--gradient-primary)',
         'gradient-secondary': 'var(--gradient-secondary)',
         'gradient-accent': 'var(--gradient-accent)',
-        'gradient-success': 'var(--gradient-success)',
-        'gradient-radial': 'var(--gradient-radial)',
       },
       boxShadow: {
-        'glow': 'var(--shadow-glow-primary)',
-        'glow-primary': 'var(--shadow-glow-primary)',
-        'glow-secondary': 'var(--shadow-glow-secondary)',
-        'glow-accent': 'var(--shadow-glow-accent)',
+        'glow': 'var(--shadow-glow)',
         'card': 'var(--shadow-card)',
-        'card-hover': 'var(--shadow-card-hover)',
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -228,200 +228,177 @@ const Generate = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-card">
       <Navbar credits={credits} />
       
-      {/* Animated Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none opacity-50">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-3xl animate-float" />
-        <div className="absolute bottom-0 left-0 w-96 h-96 bg-secondary/10 rounded-full blur-3xl animate-float" style={{ animationDelay: '2s' }} />
-      </div>
-
-      <div className="relative container mx-auto px-4 py-12 max-w-6xl">
-        {/* Hero Section */}
-        <div className="text-center mb-12 space-y-4">
-          <h1 className="text-5xl md:text-6xl font-black bg-gradient-to-r from-primary via-secondary to-accent bg-clip-text text-transparent">
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="text-center mb-8 space-y-2 animate-slide-up">
+          <h1 className="text-5xl font-bold bg-gradient-accent bg-clip-text text-transparent">
             Create with AI
           </h1>
-          <p className="text-muted-foreground text-xl max-w-2xl mx-auto">
-            Transform your ideas into stunning visuals with advanced AI technology
+          <p className="text-muted-foreground text-lg">
+            Generate stunning images and videos with AI-powered creativity
           </p>
         </div>
 
-        <Card className="shadow-card-hover border-border/50 bg-card/90 backdrop-blur-xl overflow-hidden">
-          <CardContent className="p-8">
-            <Tabs value={mode} onValueChange={(v: any) => setMode(v)} className="space-y-8">
-              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 gap-2 bg-muted/50 p-2 rounded-xl">
-                <TabsTrigger 
-                  value="text_to_image" 
-                  className="gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white rounded-lg transition-all"
-                >
+        <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm animate-slide-up">
+          <CardContent className="p-6">
+            <Tabs value={mode} onValueChange={(v: any) => setMode(v)} className="space-y-6">
+              <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+                <TabsTrigger value="text_to_image" className="gap-2">
                   <ImageIcon className="h-4 w-4" />
-                  <span className="hidden sm:inline">Text → Image</span>
-                  <span className="sm:hidden">T→I</span>
+                  Text → Image
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="image_to_image" 
-                  className="gap-2 data-[state=active]:bg-gradient-secondary data-[state=active]:text-white rounded-lg transition-all"
-                >
+                <TabsTrigger value="image_to_image" className="gap-2">
                   <Sparkles className="h-4 w-4" />
-                  <span className="hidden sm:inline">Image → Image</span>
-                  <span className="sm:hidden">I→I</span>
+                  Image → Image
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="text_to_video" 
-                  className="gap-2 data-[state=active]:bg-gradient-accent data-[state=active]:text-white rounded-lg transition-all"
-                >
+                <TabsTrigger value="text_to_video" className="gap-2">
                   <Video className="h-4 w-4" />
-                  <span className="hidden sm:inline">Text → Video</span>
-                  <span className="sm:hidden">T→V</span>
+                  Text → Video
                 </TabsTrigger>
-                <TabsTrigger 
-                  value="image_to_video" 
-                  className="gap-2 data-[state=active]:bg-gradient-primary data-[state=active]:text-white rounded-lg transition-all"
-                >
+                <TabsTrigger value="image_to_video" className="gap-2">
                   <Video className="h-4 w-4" />
-                  <span className="hidden sm:inline">Image → Video</span>
-                  <span className="sm:hidden">I→V</span>
+                  Image → Video
                 </TabsTrigger>
               </TabsList>
 
-              <TabsContent value={mode} className="space-y-6 mt-8">
+              <TabsContent value={mode} className="space-y-6">
                 {(mode === "image_to_image" || mode === "image_to_video") && (
-                  <div className="space-y-3">
-                    <Label htmlFor="file-upload" className="text-base font-semibold">Upload Image</Label>
-                    <div className="flex flex-col gap-3">
-                      <div className="relative">
-                        <Input
-                          id="file-upload"
-                          type="file"
-                          accept="image/*"
-                          onChange={handleFileUpload}
-                          className="bg-input border-border/50 hover:border-primary/50 transition-colors"
-                        />
-                      </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="file-upload">Upload Image</Label>
+                    <div className="flex items-center gap-4">
+                      <Input
+                        id="file-upload"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileUpload}
+                        className="flex-1"
+                      />
                       {uploadedFile && (
-                        <div className="flex items-center gap-2 px-4 py-3 bg-primary/10 border border-primary/30 rounded-lg">
-                          <Upload className="h-4 w-4 text-primary" />
-                          <span className="text-sm font-medium text-foreground">{uploadedFile.name}</span>
-                        </div>
+                        <span className="text-sm text-muted-foreground flex items-center gap-2">
+                          <Upload className="h-4 w-4" />
+                          {uploadedFile.name}
+                        </span>
                       )}
                     </div>
                   </div>
                 )}
 
-                <div className="space-y-3">
-                  <Label htmlFor="prompt" className="text-base font-semibold">Your Prompt</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="prompt">Prompt</Label>
                   <Textarea
                     id="prompt"
                     placeholder={
                       mode === "text_to_image"
-                        ? "A serene mountain landscape at sunset with vibrant colors..."
+                        ? "A serene mountain landscape at sunset..."
                         : mode === "image_to_image"
-                        ? "Transform this into a watercolor painting with soft colors..."
+                        ? "Transform this into a watercolor painting..."
                         : mode === "text_to_video"
-                        ? "A time-lapse of clouds moving across a colorful sunset sky..."
-                        : "Animate this image with gentle, flowing motion..."
+                        ? "A time-lapse of clouds moving across the sky..."
+                        : "Animate this image with gentle motion..."
                     }
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    className="min-h-[140px] resize-none bg-input border-border/50 hover:border-primary/50 focus:border-primary transition-colors text-base"
+                    className="min-h-[120px] resize-none bg-input"
                   />
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold">AI Provider</Label>
-                    <Select value={provider} onValueChange={setProvider}>
-                      <SelectTrigger className="bg-input border-border/50 hover:border-primary/50 transition-colors">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="vyro_ai">Vyro AI (Image & Video)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold">Model / Style</Label>
-                    <Select value={model} onValueChange={setModel}>
-                      <SelectTrigger className="bg-input border-border/50 hover:border-primary/50 transition-colors">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {mode.includes("image")
-                          ? IMAGE_MODELS.map((m) => (
-                              <SelectItem key={m.value} value={m.value}>
-                                {m.label}
-                              </SelectItem>
-                            ))
-                          : VIDEO_MODELS.map((m) => (
-                              <SelectItem key={m.value} value={m.value}>
-                                {m.label}
-                              </SelectItem>
-                            ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label className="text-base font-semibold">Aspect Ratio</Label>
-                    <Select value={aspectRatio} onValueChange={setAspectRatio}>
-                      <SelectTrigger className="bg-input border-border/50 hover:border-primary/50 transition-colors">
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {ASPECT_RATIOS.map((ar) => (
-                          <SelectItem key={ar.value} value={ar.value}>
-                            {ar.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label htmlFor="seed" className="text-base font-semibold">
-                      Seed (Optional)
-                    </Label>
-                    <Input
-                      id="seed"
-                      type="text"
-                      placeholder="Random seed"
-                      value={seed}
-                      onChange={(e) => setSeed(e.target.value)}
-                      className="bg-input border-border/50 hover:border-primary/50 transition-colors"
-                    />
-                  </div>
+                <div className="space-y-2">
+                  <Label>AI Provider</Label>
+                  <Select value={provider} onValueChange={setProvider}>
+                    <SelectTrigger className="bg-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="vyro_ai">Vyro AI (Image & Video)</SelectItem>
+                      <SelectItem value="studio_ai">Studio AI (Image only)</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
-                <div className="pt-4 border-t border-border/50">
-                  <Button
-                    size="lg"
-                    onClick={handleGenerate}
-                    disabled={isGenerating || credits < getCreditCost()}
-                    className="w-full gap-3 text-lg py-6 rounded-xl shadow-glow-primary hover:shadow-glow-accent transition-all hover:scale-105 group relative overflow-hidden"
+                <div className="space-y-2">
+                  <Label>Model/Style</Label>
+                  <Select 
+                    value={model} 
+                    onValueChange={setModel}
+                    disabled={provider === "studio_ai"}
                   >
-                    <div className="absolute inset-0 bg-gradient-primary opacity-0 group-hover:opacity-100 transition-opacity" />
-                    <span className="relative flex items-center justify-center gap-3">
-                      {isGenerating ? (
-                        <>
-                          <Loader2 className="h-5 w-5 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Sparkles className="h-5 w-5" />
-                          Generate ({getCreditCost()} credits)
-                        </>
-                      )}
-                    </span>
-                  </Button>
-                  {credits < getCreditCost() && (
-                    <p className="text-destructive text-sm text-center mt-3 font-medium">
-                      Insufficient credits. You need {getCreditCost()} credits but have {credits}.
+                    <SelectTrigger className="bg-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {(mode.includes("image") ? IMAGE_MODELS : VIDEO_MODELS).map((m) => (
+                        <SelectItem key={m.value} value={m.value}>
+                          {m.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {provider === "studio_ai" && (
+                    <p className="text-xs text-muted-foreground">
+                      Model selection not available for Studio AI
                     </p>
                   )}
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Aspect Ratio</Label>
+                  <Select value={aspectRatio} onValueChange={setAspectRatio}>
+                    <SelectTrigger className="bg-input">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ASPECT_RATIOS.map((ratio) => (
+                        <SelectItem key={ratio.value} value={ratio.value}>
+                          {ratio.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {mode.includes("image") && (
+                  <div className="space-y-2">
+                    <Label htmlFor="seed">Seed (Optional)</Label>
+                    <Input
+                      id="seed"
+                      type="number"
+                      placeholder="Leave empty for random"
+                      value={seed}
+                      onChange={(e) => setSeed(e.target.value)}
+                      className="bg-input"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use the same seed to reproduce similar images
+                    </p>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between pt-4">
+                  <div className="text-sm">
+                    <span className="text-muted-foreground">Cost: </span>
+                    <span className="font-semibold">{getCreditCost()} credits</span>
+                  </div>
+                  <Button
+                    onClick={handleGenerate}
+                    disabled={isGenerating || credits < getCreditCost()}
+                    className="bg-gradient-primary hover:opacity-90 transition-opacity min-w-[160px]"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Generating...
+                      </>
+                    ) : credits < getCreditCost() ? (
+                      "Insufficient Credits"
+                    ) : (
+                      <>
+                        <Sparkles className="mr-2 h-4 w-4" />
+                        Generate
+                      </>
+                    )}
+                  </Button>
                 </div>
               </TabsContent>
             </Tabs>
