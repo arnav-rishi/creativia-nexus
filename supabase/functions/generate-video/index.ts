@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Replicate from "https://esm.sh/replicate@0.25.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,13 +17,14 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const vyroApiKey = Deno.env.get('VYRO_API_KEY');
+    const replicateApiKey = Deno.env.get('REPLICATE_API_KEY');
     
-    if (!vyroApiKey) {
-      throw new Error('VYRO_API_KEY is not configured');
+    if (!replicateApiKey) {
+      throw new Error('REPLICATE_API_KEY is not configured');
     }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const replicate = new Replicate({ auth: replicateApiKey });
 
     const body = await req.json();
     jobId = body.jobId;
@@ -56,114 +58,98 @@ serve(async (req) => {
       .eq('id', jobId);
 
     const metadata = job.metadata || {};
-    const model = metadata.model || 'kling-1.0-pro';
-    const aspectRatio = metadata.aspect_ratio || '1:1';
+    const model = metadata.model || 'stable-video-diffusion';
 
-    console.log('Generating video with Vyro AI...', { model, aspectRatio, jobType: job.job_type });
+    console.log('Generating video with Replicate...', { model, jobType: job.job_type });
 
-    // Build form data for Vyro.ai API
-    const formData = new FormData();
-    formData.append('prompt', job.prompt);
-    formData.append('style', model);
-    if (aspectRatio) {
-      formData.append('aspect_ratio', aspectRatio);
-    }
+    // Map model to Replicate model ID
+    const modelMap: Record<string, string> = {
+      'stable-video-diffusion': 'stability-ai/stable-video-diffusion-img2vid-xt',
+      'zeroscope-v2': 'anotherjesse/zeroscope-v2-xl',
+    };
 
-    // Handle image-to-video: download and attach image
-    if (job.job_type === 'image_to_video' && job.input_image_url) {
-      console.log('Downloading input image for image-to-video...');
-      const imageResponse = await fetch(job.input_image_url);
-      if (!imageResponse.ok) {
-        throw new Error('Failed to download input image');
+    const replicateModel = modelMap[model] || modelMap['stable-video-diffusion'];
+
+    // Prepare input for Replicate
+    let input: any = {};
+
+    if (job.job_type === 'text_to_video') {
+      // For text-to-video with zeroscope
+      if (model === 'zeroscope-v2') {
+        input = {
+          prompt: job.prompt,
+          num_frames: 24,
+          fps: 8,
+        };
+      } else {
+        // Stable Video Diffusion needs an image input
+        // We'll first generate an image from the text, then convert to video
+        console.log('Text-to-video: First generating image from prompt...');
+        
+        const imageOutput = await replicate.run('black-forest-labs/flux-schnell', {
+          input: {
+            prompt: job.prompt,
+            num_outputs: 1,
+          }
+        }) as any;
+
+        const imageUrl = Array.isArray(imageOutput) ? imageOutput[0] : imageOutput;
+        
+        input = {
+          video: imageUrl,
+          sizing_strategy: 'maintain_aspect_ratio',
+          frames_per_second: 6,
+          motion_bucket_id: 127,
+        };
       }
-      const imageBlob = await imageResponse.blob();
-      formData.append('image', imageBlob, 'input.jpg');
-    }
-
-    // Determine endpoint based on job type
-    const endpoint = job.job_type === 'image_to_video' 
-      ? 'https://api.vyro.ai/v2/video/image-to-video'
-      : 'https://api.vyro.ai/v2/video/text-to-video';
-
-    // Generate video using Vyro.ai API
-    const response = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${vyroApiKey}`,
-      },
-      body: formData,
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error('Vyro AI video generation error:', error);
-      throw new Error(`Vyro AI video generation failed: ${error}`);
-    }
-
-    const data = await response.json();
-    const videoId = data.id;
-
-    if (!videoId) {
-      throw new Error('No video ID returned from API');
-    }
-
-    console.log('Video generation started, ID:', videoId);
-
-    // Store video ID in job metadata for status polling
-    await supabase
-      .from('jobs')
-      .update({
-        metadata: {
-          ...metadata,
-          vyro_video_id: videoId,
-        },
-      })
-      .eq('id', jobId);
-
-    // Start polling for video status
-    let attempts = 0;
-    const maxAttempts = 120; // 10 minutes max (5 second intervals)
-    let videoUrl: string | null = null;
-    let thumbnailUrl: string | null = null;
-
-    while (attempts < maxAttempts) {
-      await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
-      attempts++;
-
-      console.log(`Checking video status (attempt ${attempts}/${maxAttempts})...`);
-
-      const statusResponse = await fetch(`https://api.vyro.ai/v2/assets/${videoId}/status`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${vyroApiKey}`,
-        },
-      });
-
-      if (!statusResponse.ok) {
-        console.error('Status check failed:', await statusResponse.text());
-        continue;
+    } else if (job.job_type === 'image_to_video') {
+      // Image-to-video
+      if (!job.input_image_url) {
+        throw new Error('Input image URL is required for image-to-video');
       }
 
-      const statusData = await statusResponse.json();
-
-      if (statusData.status === 'success' && statusData.video?.status === 'finished') {
-        videoUrl = statusData.video.url?.generation;
-        thumbnailUrl = statusData.video.url?.thumbnail;
-        console.log('Video generation completed!', { videoUrl, thumbnailUrl });
-        break;
-      } else if (statusData.video?.status === 'failed' || statusData.status === 'error') {
-        throw new Error(`Video generation failed: ${statusData.message || 'Unknown error'}`);
+      console.log('Using image-to-video mode with input:', job.input_image_url);
+      
+      if (model === 'zeroscope-v2') {
+        // Zeroscope doesn't support image-to-video, fall back to SVD
+        input = {
+          video: job.input_image_url,
+          sizing_strategy: 'maintain_aspect_ratio',
+          frames_per_second: 6,
+          motion_bucket_id: 127,
+        };
+      } else {
+        input = {
+          video: job.input_image_url,
+          sizing_strategy: 'maintain_aspect_ratio',
+          frames_per_second: 6,
+          motion_bucket_id: 127,
+        };
       }
-
-      console.log(`Video status: ${statusData.video?.status || statusData.status}, continuing to poll...`);
     }
 
-    if (!videoUrl) {
-      throw new Error('Video generation timed out or failed');
+    console.log('Running Replicate with input:', input);
+
+    // Generate video using Replicate
+    const output = await replicate.run(replicateModel, { input }) as any;
+
+    console.log('Replicate video output:', output);
+
+    // Handle output (can be array or single URL)
+    let videoUrl: string;
+    if (Array.isArray(output)) {
+      videoUrl = output[0];
+    } else if (typeof output === 'string') {
+      videoUrl = output;
+    } else if (output?.url) {
+      videoUrl = output.url;
+    } else {
+      throw new Error('Unexpected output format from Replicate');
     }
+
+    console.log('Video generated, downloading from:', videoUrl);
 
     // Download the video
-    console.log('Downloading video...');
     const videoResponse = await fetch(videoUrl);
     if (!videoResponse.ok) {
       throw new Error('Failed to download generated video');
@@ -187,19 +173,16 @@ serve(async (req) => {
       throw uploadError;
     }
 
-    // For private buckets, we need to use signed URLs or make bucket public
-    // Try to get public URL first, but it may not work for private buckets
-    const { data: { publicUrl } } = supabase.storage
-      .from('generations')
-      .getPublicUrl(fileName);
-
-    // Also create a signed URL as fallback (valid for 1 year)
+    // Create a signed URL (valid for 1 year)
     const { data: signedData } = await supabase.storage
       .from('generations')
-      .createSignedUrl(fileName, 31536000); // 1 year
+      .createSignedUrl(fileName, 31536000);
 
-    // Use signed URL if available, otherwise use public URL
-    const finalUrl = signedData?.signedUrl || publicUrl;
+    const finalUrl = signedData?.signedUrl;
+
+    if (!finalUrl) {
+      throw new Error('Failed to create signed URL');
+    }
 
     console.log('Video uploaded to storage:', finalUrl);
 
@@ -221,11 +204,9 @@ serve(async (req) => {
         generation_type: 'video',
         prompt: job.prompt,
         result_url: finalUrl,
-        provider: job.provider,
+        provider: 'replicate',
         metadata: { 
-          model,
-          aspect_ratio: aspectRatio,
-          thumbnail_url: thumbnailUrl,
+          model: replicateModel,
         },
       });
 
@@ -289,4 +270,3 @@ serve(async (req) => {
     );
   }
 });
-
