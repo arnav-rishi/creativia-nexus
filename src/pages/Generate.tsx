@@ -22,8 +22,10 @@ const IMAGE_MODELS = [
 
 // Video models for Replicate
 const VIDEO_MODELS = [
-  { value: "veo-3-fast", label: "Google Veo 3 Fast (Recommended)" },
-  { value: "pixverse-v4.5", label: "Pixverse V4.5 (Fast & Quality)" },
+  { value: "sora-2", label: "Sora 2 (OpenAI - Fast)" },
+  { value: "sora-2-pro", label: "Sora 2 Pro (OpenAI - High Quality)" },
+  { value: "veo-3-fast", label: "Google Veo 3 Fast" },
+  { value: "pixverse-v4.5", label: "Pixverse V4.5" },
   { value: "stable-video-diffusion", label: "Stable Video Diffusion (Image-to-Video)" },
 ];
 
