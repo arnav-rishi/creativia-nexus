@@ -104,6 +104,9 @@ serve(async (req) => {
       if (replicateError.message?.includes('402') || replicateError.message?.includes('Insufficient credit')) {
         throw new Error('Insufficient Replicate credits. Please add credits to your Replicate account at https://replicate.com/account/billing');
       }
+      if (replicateError.message?.includes('429') || replicateError.message?.includes('Too Many Requests') || replicateError.message?.includes('throttled')) {
+        throw new Error('Replicate rate limit exceeded. Please add more credits to your Replicate account to increase your rate limit at https://replicate.com/account/billing');
+      }
       throw replicateError;
     }
 
