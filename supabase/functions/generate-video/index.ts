@@ -79,7 +79,7 @@ serve(async (req) => {
       if (model === 'veo-3-fast' || model === 'pixverse-v4.5') {
         input = {
           prompt: job.prompt,
-          duration: 5, // 5 seconds for faster generation
+          duration: 8, // Valid values: 4, 6, or 8 seconds
         };
         
         // Add model-specific parameters
