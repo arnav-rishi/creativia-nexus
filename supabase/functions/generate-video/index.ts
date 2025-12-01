@@ -65,7 +65,8 @@ serve(async (req) => {
     // Map model to Replicate model ID
     const modelMap: Record<string, string> = {
       'stable-video-diffusion': 'stability-ai/stable-video-diffusion-img2vid-xt',
-      'zeroscope-v2': 'anotherjesse/zeroscope-v2-xl',
+      'veo-3-fast': 'google/veo-3-fast',
+      'pixverse-v4.5': 'pixverse/pixverse-v4.5',
     };
 
     const replicateModel = modelMap[model] || modelMap['stable-video-diffusion'];
@@ -74,13 +75,17 @@ serve(async (req) => {
     let input: any = {};
 
     if (job.job_type === 'text_to_video') {
-      // For text-to-video with zeroscope
-      if (model === 'zeroscope-v2') {
+      // For direct text-to-video models (Veo, Pixverse)
+      if (model === 'veo-3-fast' || model === 'pixverse-v4.5') {
         input = {
           prompt: job.prompt,
-          num_frames: 24,
-          fps: 8,
+          duration: 5, // 5 seconds for faster generation
         };
+        
+        // Add model-specific parameters
+        if (model === 'pixverse-v4.5') {
+          input.resolution = '720p'; // 540p, 720p, or 1080p
+        }
       } else {
         // Stable Video Diffusion needs an image input
         // We'll first generate an image from the text, then convert to video
@@ -121,22 +126,13 @@ serve(async (req) => {
 
       console.log('Using image-to-video mode with input:', job.input_image_url);
       
-      if (model === 'zeroscope-v2') {
-        // Zeroscope doesn't support image-to-video, fall back to SVD
-        input = {
-          video: job.input_image_url,
-          sizing_strategy: 'maintain_aspect_ratio',
-          frames_per_second: 6,
-          motion_bucket_id: 127,
-        };
-      } else {
-        input = {
-          video: job.input_image_url,
-          sizing_strategy: 'maintain_aspect_ratio',
-          frames_per_second: 6,
-          motion_bucket_id: 127,
-        };
-      }
+      // All models support image-to-video
+      input = {
+        video: job.input_image_url,
+        sizing_strategy: 'maintain_aspect_ratio',
+        frames_per_second: 6,
+        motion_bucket_id: 127,
+      };
     }
 
     console.log('Running Replicate with input:', input);

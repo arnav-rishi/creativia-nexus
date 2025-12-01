@@ -22,8 +22,9 @@ const IMAGE_MODELS = [
 
 // Video models for Replicate
 const VIDEO_MODELS = [
-  { value: "stable-video-diffusion", label: "Stable Video Diffusion" },
-  { value: "zeroscope-v2", label: "Zeroscope V2" },
+  { value: "veo-3-fast", label: "Google Veo 3 Fast (Recommended)" },
+  { value: "pixverse-v4.5", label: "Pixverse V4.5 (Fast & Quality)" },
+  { value: "stable-video-diffusion", label: "Stable Video Diffusion (Image-to-Video)" },
 ];
 
 const ASPECT_RATIOS = [
