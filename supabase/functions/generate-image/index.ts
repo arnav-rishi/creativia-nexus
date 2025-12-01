@@ -40,6 +40,11 @@ serve(async (req) => {
       throw new Error('Job not found');
     }
 
+    // Validate prompt
+    if (!job.prompt || job.prompt.length > 1000) {
+      throw new Error('Invalid prompt: must be 1-1000 characters');
+    }
+
     // Update job status to processing
     await supabase
       .from('jobs')

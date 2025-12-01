@@ -116,6 +116,11 @@ const Generate = () => {
       return;
     }
 
+    if (prompt.length > 1000) {
+      toast.error("Prompt too long (max 1000 characters)");
+      return;
+    }
+
     if ((mode === "image_to_image" || mode === "image_to_video") && !uploadedFile) {
       toast.error("Please upload an image first");
       return;
