@@ -52,31 +52,53 @@ const Jobs = () => {
   };
 
   const fetchCredits = async (userId: string) => {
-    const { data } = await supabase
-      .from("credits")
-      .select("balance")
-      .eq("user_id", userId)
-      .single();
-    
-    if (data) setCredits(data.balance);
+    try {
+      const { data, error } = await supabase
+        .from("credits")
+        .select("balance")
+        .eq("user_id", userId)
+        .single();
+      
+      if (error) throw error;
+      if (data) setCredits(data.balance);
+    } catch (error) {
+      console.error("Error fetching credits:", error);
+      // Don't show error toast for credits - it's not critical
+    }
   };
 
   const fetchJobs = async (userId: string, silent = false) => {
     if (!silent) setIsLoading(true);
     
-    const { data, error } = await supabase
-      .from("jobs")
-      .select("*")
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
+    try {
+      const { data, error } = await supabase
+        .from("jobs")
+        .select("*")
+        .eq("user_id", userId)
+        .order("created_at", { ascending: false });
 
-    if (error) {
-      if (!silent) toast.error("Failed to load jobs");
-    } else {
-      setJobs(data || []);
+      if (error) throw error;
+      
+      // Filter out old pending jobs (older than 7 days) that are likely stuck
+      const sevenDaysAgo = new Date();
+      sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+      
+      const filteredJobs = (data || []).filter(job => {
+        const jobDate = new Date(job.created_at);
+        // Show all completed/failed jobs, but only recent pending/processing jobs
+        if (job.status === 'pending' || job.status === 'processing') {
+          return jobDate > sevenDaysAgo;
+        }
+        return true;
+      });
+      
+      setJobs(filteredJobs);
+    } catch (error) {
+      console.error("Error fetching jobs:", error);
+      if (!silent) toast.error("Failed to load jobs. Please refresh the page.");
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   const handleRefresh = async () => {
