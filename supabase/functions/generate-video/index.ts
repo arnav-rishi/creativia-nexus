@@ -18,13 +18,14 @@ serve(async (req) => {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const replicateApiKey = Deno.env.get('REPLICATE_API_KEY');
-    
-    if (!replicateApiKey) {
-      throw new Error('REPLICATE_API_KEY is not configured');
-    }
+    const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
     
     const supabase = createClient(supabaseUrl, supabaseKey);
-    const replicate = new Replicate({ auth: replicateApiKey });
+    let replicate;
+    
+    if (replicateApiKey) {
+      replicate = new Replicate({ auth: replicateApiKey });
+    }
 
     const body = await req.json();
     jobId = body.jobId;
@@ -59,8 +60,172 @@ serve(async (req) => {
 
     const metadata = job.metadata || {};
     const model = metadata.model || 'stable-video-diffusion';
+    const provider = model.startsWith('sora-') ? 'openai' : 'replicate';
 
-    console.log('Generating video with Replicate...', { model, jobType: job.job_type });
+    console.log('Generating video...', { model, jobType: job.job_type, provider });
+
+    // Handle OpenAI Sora models
+    if (provider === 'openai') {
+      if (!openAiApiKey) {
+        throw new Error('OPENAI_API_KEY is not configured');
+      }
+
+      // Create video with Sora
+      const createResponse = await fetch('https://api.openai.com/v1/videos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          prompt: job.prompt,
+          size: '1280x720',
+          seconds: '8',
+        }),
+      });
+
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text();
+        console.error('Sora API error:', createResponse.status, errorText);
+        throw new Error(`Sora API error: ${createResponse.status} ${errorText}`);
+      }
+
+      const createData = await createResponse.json();
+      const videoId = createData.id;
+      console.log('Sora video job created:', videoId);
+
+      // Poll for completion
+      let videoUrl: string | null = null;
+      let attempts = 0;
+      const maxAttempts = 60; // 5 minutes max
+
+      while (!videoUrl && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
+        
+        const statusResponse = await fetch(`https://api.openai.com/v1/videos/${videoId}`, {
+          headers: {
+            'Authorization': `Bearer ${openAiApiKey}`,
+          },
+        });
+
+        if (!statusResponse.ok) {
+          throw new Error('Failed to check Sora video status');
+        }
+
+        const statusData = await statusResponse.json();
+        console.log('Sora video status:', statusData.status);
+
+        if (statusData.status === 'completed') {
+          // Download the video
+          const downloadResponse = await fetch(`https://api.openai.com/v1/videos/${videoId}/content`, {
+            headers: {
+              'Authorization': `Bearer ${openAiApiKey}`,
+            },
+          });
+
+          if (!downloadResponse.ok) {
+            throw new Error('Failed to download Sora video');
+          }
+
+          const videoBlob = await downloadResponse.blob();
+          const fileName = `${job.user_id}/${jobId}_${Date.now()}.mp4`;
+          const arrayBuffer = await videoBlob.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          
+          const { error: uploadError } = await supabase.storage
+            .from('generations')
+            .upload(fileName, uint8Array, {
+              contentType: 'video/mp4',
+            });
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            throw uploadError;
+          }
+
+          const { data: signedData } = await supabase.storage
+            .from('generations')
+            .createSignedUrl(fileName, 31536000);
+
+          videoUrl = signedData?.signedUrl || null;
+          if (!videoUrl) {
+            throw new Error('Failed to create signed URL');
+          }
+          break;
+        } else if (statusData.status === 'failed') {
+          throw new Error(`Sora video generation failed: ${statusData.error || 'Unknown error'}`);
+        }
+
+        attempts++;
+      }
+
+      if (!videoUrl) {
+        throw new Error('Video generation timeout');
+      }
+
+      // Update job with result
+      await supabase
+        .from('jobs')
+        .update({
+          status: 'completed',
+          result_url: videoUrl,
+        })
+        .eq('id', jobId);
+
+      // Create generation record
+      await supabase
+        .from('generations')
+        .insert({
+          user_id: job.user_id,
+          job_id: jobId,
+          generation_type: 'video',
+          prompt: job.prompt,
+          result_url: videoUrl,
+          provider: 'openai',
+          metadata: { 
+            model: model,
+          },
+        });
+
+      // Deduct credits
+      const { data: credits } = await supabase
+        .from('credits')
+        .select('balance, total_spent')
+        .eq('user_id', job.user_id)
+        .single();
+
+      if (credits) {
+        await supabase
+          .from('credits')
+          .update({
+            balance: credits.balance - job.cost_credits,
+            total_spent: credits.total_spent + job.cost_credits,
+          })
+          .eq('user_id', job.user_id);
+
+        await supabase
+          .from('credit_transactions')
+          .insert({
+            user_id: job.user_id,
+            amount: -job.cost_credits,
+            type: 'spend',
+            description: `Generated ${job.job_type} with ${model}`,
+          });
+      }
+
+      console.log('Sora video job completed successfully');
+
+      return new Response(
+        JSON.stringify({ success: true, resultUrl: videoUrl }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle Replicate models
+    if (!replicateApiKey || !replicate) {
+      throw new Error('REPLICATE_API_KEY is not configured');
+    }
 
     // Map model to Replicate model ID
     const modelMap: Record<string, string> = {
