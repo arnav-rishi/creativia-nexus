@@ -86,12 +86,20 @@ serve(async (req) => {
         // We'll first generate an image from the text, then convert to video
         console.log('Text-to-video: First generating image from prompt...');
         
-        const imageOutput = await replicate.run('black-forest-labs/flux-schnell', {
-          input: {
-            prompt: job.prompt,
-            num_outputs: 1,
+        let imageOutput: any;
+        try {
+          imageOutput = await replicate.run('black-forest-labs/flux-schnell', {
+            input: {
+              prompt: job.prompt,
+              num_outputs: 1,
+            }
+          }) as any;
+        } catch (replicateError: any) {
+          if (replicateError.message?.includes('402') || replicateError.message?.includes('Insufficient credit')) {
+            throw new Error('Insufficient Replicate credits. Please add credits to your Replicate account at https://replicate.com/account/billing');
           }
-        }) as any;
+          throw replicateError;
+        }
 
         const imageUrl = Array.isArray(imageOutput) ? imageOutput[0] : imageOutput;
         
@@ -131,7 +139,15 @@ serve(async (req) => {
     console.log('Running Replicate with input:', input);
 
     // Generate video using Replicate
-    const output = await replicate.run(replicateModel, { input }) as any;
+    let output: any;
+    try {
+      output = await replicate.run(replicateModel, { input }) as any;
+    } catch (replicateError: any) {
+      if (replicateError.message?.includes('402') || replicateError.message?.includes('Insufficient credit')) {
+        throw new Error('Insufficient Replicate credits. Please add credits to your Replicate account at https://replicate.com/account/billing');
+      }
+      throw replicateError;
+    }
 
     console.log('Replicate video output:', output);
 

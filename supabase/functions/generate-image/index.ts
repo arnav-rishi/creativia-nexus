@@ -96,7 +96,16 @@ serve(async (req) => {
     }
 
     // Generate image using Replicate
-    const output = await replicate.run(replicateModel, { input }) as any;
+    let output: any;
+    try {
+      output = await replicate.run(replicateModel, { input }) as any;
+    } catch (replicateError: any) {
+      // Handle Replicate-specific errors
+      if (replicateError.message?.includes('402') || replicateError.message?.includes('Insufficient credit')) {
+        throw new Error('Insufficient Replicate credits. Please add credits to your Replicate account at https://replicate.com/account/billing');
+      }
+      throw replicateError;
+    }
 
     console.log('Replicate output:', output);
 
