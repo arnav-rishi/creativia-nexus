@@ -154,7 +154,8 @@ serve(async (req) => {
           }
           break;
         } else if (statusData.status === 'failed') {
-          throw new Error(`Sora video generation failed: ${statusData.error || 'Unknown error'}`);
+          const errorDetails = statusData.error ? JSON.stringify(statusData.error) : 'Unknown error';
+          throw new Error(`Sora video generation failed: ${errorDetails}`);
         }
 
         attempts++;
