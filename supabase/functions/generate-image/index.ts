@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Replicate from "https://esm.sh/replicate@0.25.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,9 +17,14 @@ serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const lovableApiKey = Deno.env.get('LOVABLE_API_KEY')!;
+    const replicateApiKey = Deno.env.get('REPLICATE_API_KEY');
+    
+    if (!replicateApiKey) {
+      throw new Error('REPLICATE_API_KEY is not configured');
+    }
     
     const supabase = createClient(supabaseUrl, supabaseKey);
+    const replicate = new Replicate({ auth: replicateApiKey });
 
     const body = await req.json();
     jobId = body.jobId;
@@ -27,7 +33,7 @@ serve(async (req) => {
       throw new Error('Job ID is required');
     }
 
-    console.log('Processing job:', jobId);
+    console.log('Processing image job:', jobId);
 
     // Fetch job details
     const { data: job, error: jobError } = await supabase
@@ -51,91 +57,70 @@ serve(async (req) => {
       .update({ status: 'processing' })
       .eq('id', jobId);
 
-    const vyroApiKey = Deno.env.get('VYRO_API_KEY');
-    
-    if (!vyroApiKey) {
-      throw new Error('VYRO_API_KEY is not configured');
-    }
     const metadata = job.metadata || {};
-    const model = metadata.model || 'realistic';
+    const model = metadata.model || 'flux-schnell';
     const aspectRatio = metadata.aspect_ratio || '1:1';
     const seed = metadata.seed;
 
-    let imageBlob: Blob;
+    console.log('Generating image with Replicate...', { model, aspectRatio, jobType: job.job_type });
 
-    if (job.provider === 'vyro_ai') {
-      console.log('Generating image with Vyro AI...', { model, aspectRatio, seed });
+    // Map model to Replicate model ID
+    const modelMap: Record<string, string> = {
+      'flux-schnell': 'black-forest-labs/flux-schnell',
+      'flux-dev': 'black-forest-labs/flux-dev',
+      'flux-pro': 'black-forest-labs/flux-1.1-pro',
+      'stable-diffusion-xl': 'stability-ai/sdxl',
+    };
 
-      // Build form data for Vyro.ai API
-      const formData = new FormData();
-      formData.append('prompt', job.prompt);
-      formData.append('style', model);
-      if (aspectRatio) {
-        formData.append('aspect_ratio', aspectRatio);
-      }
-      if (seed) {
-        formData.append('seed', seed.toString());
-      }
+    const replicateModel = modelMap[model] || modelMap['flux-schnell'];
 
-      // Generate image using Vyro.ai API
-      const response = await fetch('https://api.vyro.ai/v2/image/generations', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${vyroApiKey}`,
-        },
-        body: formData,
-      });
+    // Prepare input for Replicate
+    const input: any = {
+      prompt: job.prompt,
+      aspect_ratio: aspectRatio,
+      num_outputs: 1,
+      output_format: 'png',
+      output_quality: 90,
+    };
 
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('Vyro AI generation error:', error);
-        throw new Error(`Vyro AI generation failed: ${error}`);
-      }
-
-      // Vyro.ai returns binary image data
-      imageBlob = await response.blob();
-      console.log('Image generated successfully with Vyro AI');
-    } else {
-      // Lovable AI (legacy support)
-      console.log('Generating image with Lovable AI...');
-
-      const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${lovableApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          model: 'google/gemini-2.5-flash-image-preview',
-          messages: [
-            {
-              role: 'user',
-              content: `Generate a high-quality image based on this prompt: ${job.prompt}`,
-            },
-          ],
-          modalities: ['image', 'text'],
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.text();
-        console.error('AI generation error:', error);
-        throw new Error(`AI generation failed: ${error}`);
-      }
-
-      const data = await response.json();
-      const imageUrl = data.choices?.[0]?.message?.images?.[0]?.image_url?.url;
-
-      if (!imageUrl) {
-        throw new Error('No image generated');
-      }
-
-      // Convert base64 to blob
-      const base64Data = imageUrl.split(',')[1];
-      const binaryData = Uint8Array.from(atob(base64Data), c => c.charCodeAt(0));
-      imageBlob = new Blob([binaryData], { type: 'image/png' });
-      console.log('Image generated successfully with Lovable AI');
+    // Add seed if provided
+    if (seed) {
+      input.seed = parseInt(seed);
     }
+
+    // Handle image-to-image mode
+    if (job.job_type === 'image_to_image' && job.input_image_url) {
+      console.log('Using image-to-image mode with input:', job.input_image_url);
+      input.image = job.input_image_url;
+      input.prompt_strength = 0.8; // How much to transform the input image
+    }
+
+    // Generate image using Replicate
+    const output = await replicate.run(replicateModel, { input }) as any;
+
+    console.log('Replicate output:', output);
+
+    // Handle output (can be array or single URL)
+    let imageUrl: string;
+    if (Array.isArray(output)) {
+      imageUrl = output[0];
+    } else if (typeof output === 'string') {
+      imageUrl = output;
+    } else if (output?.url) {
+      imageUrl = output.url;
+    } else {
+      throw new Error('Unexpected output format from Replicate');
+    }
+
+    console.log('Image generated, downloading from:', imageUrl);
+
+    // Download the image
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error('Failed to download generated image');
+    }
+
+    const imageBlob = await imageResponse.blob();
 
     // Upload the image to storage
     const fileName = `${job.user_id}/${jobId}_${Date.now()}.png`;
@@ -145,7 +130,7 @@ serve(async (req) => {
     const { error: uploadError } = await supabase.storage
       .from('generations')
       .upload(fileName, uint8Array, {
-        contentType: imageBlob.type || 'image/png',
+        contentType: 'image/png',
       });
 
     if (uploadError) {
@@ -153,19 +138,16 @@ serve(async (req) => {
       throw uploadError;
     }
 
-    // For private buckets, we need to use signed URLs or make bucket public
-    // Try to get public URL first, but it may not work for private buckets
-    const { data: { publicUrl } } = supabase.storage
-      .from('generations')
-      .getPublicUrl(fileName);
-
-    // Also create a signed URL as fallback (valid for 1 year)
+    // Create a signed URL (valid for 1 year)
     const { data: signedData } = await supabase.storage
       .from('generations')
-      .createSignedUrl(fileName, 31536000); // 1 year
+      .createSignedUrl(fileName, 31536000);
 
-    // Use signed URL if available, otherwise use public URL
-    const finalUrl = signedData?.signedUrl || publicUrl;
+    const finalUrl = signedData?.signedUrl;
+
+    if (!finalUrl) {
+      throw new Error('Failed to create signed URL');
+    }
 
     console.log('Image uploaded to storage:', finalUrl);
 
@@ -187,9 +169,9 @@ serve(async (req) => {
         generation_type: 'image',
         prompt: job.prompt,
         result_url: finalUrl,
-        provider: job.provider,
+        provider: 'replicate',
         metadata: { 
-          model: job.provider === 'vyro_ai' ? model : 'google/gemini-2.5-flash-image-preview',
+          model: replicateModel,
           aspect_ratio: aspectRatio,
           seed: seed || null,
         },
@@ -221,7 +203,7 @@ serve(async (req) => {
         });
     }
 
-    console.log('Job completed successfully');
+    console.log('Image job completed successfully');
 
     return new Response(
       JSON.stringify({ success: true, resultUrl: finalUrl }),

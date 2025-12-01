@@ -12,38 +12,18 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { Loader2, Image as ImageIcon, Video, Upload, Sparkles } from "lucide-react";
 
-// Image models/styles
+// Image models for Replicate
 const IMAGE_MODELS = [
-  { value: "anime", label: "Anime" },
-  { value: "realistic", label: "Realistic" },
-  { value: "flux-dev", label: "Flux Dev" },
-  { value: "flux-schnell", label: "Flux Schnell" },
-  { value: "imagine-turbo", label: "Imagine Turbo" },
-  { value: "sdxl-1.0", label: "SDXL 1.0" },
+  { value: "flux-schnell", label: "Flux Schnell (Fast & High Quality)" },
+  { value: "flux-dev", label: "Flux Dev (Slower, Higher Quality)" },
+  { value: "flux-pro", label: "Flux Pro (Best Quality)" },
+  { value: "stable-diffusion-xl", label: "Stable Diffusion XL" },
 ];
 
-// Video models/styles
+// Video models for Replicate
 const VIDEO_MODELS = [
-  { value: "kling-1.0-pro", label: "Kling 1.0 Pro" },
-  { value: "kling-1.5-pro", label: "Kling 1.5 Pro" },
-  { value: "kling-1.6-pro", label: "Kling 1.6 Pro" },
-  { value: "kling-1.6-standard", label: "Kling 1.6 Standard" },
-  { value: "fast-svd-lcm", label: "Fast SVD LCM" },
-  { value: "fast-svd", label: "Fast SVD" },
-  { value: "luma-dream-machine-ray-2", label: "Luma Dream Machine Ray 2" },
-  { value: "luma-dream-machine-ray-2-flash", label: "Luma Dream Machine Ray 2 Flash" },
-  { value: "luma-dream-machine", label: "Luma Dream Machine" },
-  { value: "magi", label: "Magi" },
-  { value: "magi-distilled", label: "Magi Distilled" },
-  { value: "minimax-video-01", label: "MiniMax Video 01" },
-  { value: "minimax-video-01-director", label: "MiniMax Video 01 Director" },
-  { value: "minimax-video-01-live", label: "MiniMax Video 01 Live" },
-  { value: "mochi-v1", label: "Mochi V1" },
-  { value: "pika-2.1", label: "Pika 2.1" },
-  { value: "pika-2.2", label: "Pika 2.2" },
-  { value: "pixverse-3.5", label: "Pixverse 3.5" },
-  { value: "veo-2", label: "Veo 2" },
-  { value: "ltx-video-v095", label: "LTX Video V095" },
+  { value: "stable-video-diffusion", label: "Stable Video Diffusion" },
+  { value: "zeroscope-v2", label: "Zeroscope V2" },
 ];
 
 const ASPECT_RATIOS = [
@@ -58,8 +38,8 @@ const Generate = () => {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [mode, setMode] = useState<"text_to_image" | "image_to_image" | "text_to_video" | "image_to_video">("text_to_image");
-  const [provider, setProvider] = useState("vyro_ai");
-  const [model, setModel] = useState("realistic");
+  const [provider, setProvider] = useState("replicate");
+  const [model, setModel] = useState("flux-schnell");
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [seed, setSeed] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
@@ -72,9 +52,9 @@ const Generate = () => {
   // Reset model when mode changes
   useEffect(() => {
     if (mode.includes("image")) {
-      setModel("realistic");
+      setModel("flux-schnell");
     } else {
-      setModel("kling-1.0-pro");
+      setModel("stable-video-diffusion");
     }
   }, [mode]);
 
@@ -175,43 +155,28 @@ const Generate = () => {
       if (jobError) throw jobError;
 
       // Trigger appropriate function based on mode
-      if (provider === "vyro_ai") {
-        if (mode === "text_to_image" || mode === "image_to_image") {
-          // Trigger image generation
-          supabase.functions.invoke('generate-image', {
-            body: { jobId: job.id }
-          }).then(({ data, error }) => {
-            if (error) {
-              console.error('Processing error:', error);
-              toast.error("Failed to start image generation");
-            }
-          });
-        } else if (mode === "text_to_video" || mode === "image_to_video") {
-          // Trigger video generation
-          supabase.functions.invoke('generate-video', {
-            body: { jobId: job.id }
-          }).then(({ data, error }) => {
-            if (error) {
-              console.error('Processing error:', error);
-              toast.error("Failed to start video generation");
-            }
-          });
-        }
-        
-        toast.success("Generation started! Check your gallery in a moment.");
-      } else if (provider === "studio_ai" && mode === "text_to_image") {
-        // Keep support for Studio AI
+      if (mode === "text_to_image" || mode === "image_to_image") {
+        // Trigger image generation
         supabase.functions.invoke('generate-image', {
           body: { jobId: job.id }
         }).then(({ data, error }) => {
           if (error) {
             console.error('Processing error:', error);
+            toast.error("Failed to start image generation");
           }
         });
-        
         toast.success("Generation started! Check your gallery in a moment.");
-      } else {
-        toast.info("This mode requires additional API configuration. Job queued.");
+      } else if (mode === "text_to_video" || mode === "image_to_video") {
+        // Trigger video generation
+        supabase.functions.invoke('generate-video', {
+          body: { jobId: job.id }
+        }).then(({ data, error }) => {
+          if (error) {
+            console.error('Processing error:', error);
+            toast.error("Failed to start video generation");
+          }
+        });
+        toast.success("Generation started! Check your gallery in a moment.");
       }
 
       setPrompt("");
@@ -311,15 +276,17 @@ const Generate = () => {
 
                 <div className="space-y-2">
                   <Label>AI Provider</Label>
-                  <Select value={provider} onValueChange={setProvider}>
+                  <Select value={provider} onValueChange={setProvider} disabled>
                     <SelectTrigger className="bg-input">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="vyro_ai">Vyro AI (Image & Video)</SelectItem>
-                      <SelectItem value="studio_ai">Studio AI (Image only)</SelectItem>
+                      <SelectItem value="replicate">Replicate (All Features)</SelectItem>
                     </SelectContent>
                   </Select>
+                  <p className="text-xs text-muted-foreground">
+                    Using Replicate for all generation types
+                  </p>
                 </div>
 
                 <div className="space-y-2">
@@ -327,7 +294,6 @@ const Generate = () => {
                   <Select 
                     value={model} 
                     onValueChange={setModel}
-                    disabled={provider === "studio_ai"}
                   >
                     <SelectTrigger className="bg-input">
                       <SelectValue />
@@ -340,11 +306,6 @@ const Generate = () => {
                       ))}
                     </SelectContent>
                   </Select>
-                  {provider === "studio_ai" && (
-                    <p className="text-xs text-muted-foreground">
-                      Model selection not available for Studio AI
-                    </p>
-                  )}
                 </div>
 
                 <div className="space-y-2">
