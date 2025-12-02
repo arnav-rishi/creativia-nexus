@@ -13,6 +13,9 @@ serve(async (req) => {
   }
 
   let jobId: string | undefined;
+  let creditsDeducted = false;
+  let supabase: any;
+  let job: any;
   
   try {
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -23,7 +26,7 @@ serve(async (req) => {
       throw new Error('REPLICATE_API_KEY is not configured');
     }
     
-    const supabase = createClient(supabaseUrl, supabaseKey);
+    supabase = createClient(supabaseUrl, supabaseKey);
     const replicate = new Replicate({ auth: replicateApiKey });
 
     const body = await req.json();
@@ -36,20 +39,51 @@ serve(async (req) => {
     console.log('Processing image job:', jobId);
 
     // Fetch job details
-    const { data: job, error: jobError } = await supabase
+    const { data: jobData, error: jobError } = await supabase
       .from('jobs')
       .select('*')
       .eq('id', jobId)
       .single();
 
-    if (jobError || !job) {
+    if (jobError || !jobData) {
       throw new Error('Job not found');
     }
+    
+    job = jobData;
 
     // Validate prompt
     if (!job.prompt || job.prompt.length > 1000) {
       throw new Error('Invalid prompt: must be 1-1000 characters');
     }
+
+    // ATOMIC CREDIT DEDUCTION - Deduct credits at the START
+    const { data: deductResult, error: deductError } = await supabase
+      .rpc('deduct_credits', { 
+        p_user_id: job.user_id, 
+        p_amount: job.cost_credits 
+      });
+
+    if (deductError) {
+      console.error('Credit deduction error:', deductError);
+      throw new Error('Failed to process credits');
+    }
+
+    if (!deductResult) {
+      throw new Error('Insufficient credits');
+    }
+
+    creditsDeducted = true;
+    console.log('Credits deducted successfully:', job.cost_credits);
+
+    // Record credit transaction
+    await supabase
+      .from('credit_transactions')
+      .insert({
+        user_id: job.user_id,
+        amount: -job.cost_credits,
+        type: 'spend',
+        description: `Generated ${job.job_type}`,
+      });
 
     // Update job status to processing
     await supabase
@@ -189,32 +223,6 @@ serve(async (req) => {
         },
       });
 
-    // Deduct credits
-    const { data: credits } = await supabase
-      .from('credits')
-      .select('balance, total_spent')
-      .eq('user_id', job.user_id)
-      .single();
-
-    if (credits) {
-      await supabase
-        .from('credits')
-        .update({
-          balance: credits.balance - job.cost_credits,
-          total_spent: credits.total_spent + job.cost_credits,
-        })
-        .eq('user_id', job.user_id);
-
-      await supabase
-        .from('credit_transactions')
-        .insert({
-          user_id: job.user_id,
-          amount: -job.cost_credits,
-          type: 'spend',
-          description: `Generated ${job.job_type}`,
-        });
-    }
-
     console.log('Image job completed successfully');
 
     return new Response(
@@ -224,14 +232,44 @@ serve(async (req) => {
   } catch (error: any) {
     console.error('Error:', error);
     
+    // Refund credits if they were deducted but the job failed
+    if (creditsDeducted && supabase && job) {
+      try {
+        console.log('Refunding credits due to job failure:', job.cost_credits);
+        await supabase
+          .from('credits')
+          .update({
+            balance: supabase.sql`balance + ${job.cost_credits}`,
+          })
+          .eq('user_id', job.user_id);
+        
+        // Use raw SQL for atomic increment
+        await supabase.rpc('deduct_credits', { 
+          p_user_id: job.user_id, 
+          p_amount: -job.cost_credits // Negative to refund
+        });
+
+        await supabase
+          .from('credit_transactions')
+          .insert({
+            user_id: job.user_id,
+            amount: job.cost_credits,
+            type: 'refund',
+            description: `Refund for failed ${job.job_type}`,
+          });
+      } catch (refundError) {
+        console.error('Failed to refund credits:', refundError);
+      }
+    }
+    
     // Update job status to failed
     if (jobId) {
       try {
         const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
         const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-        const supabase = createClient(supabaseUrl, supabaseKey);
+        const client = supabase || createClient(supabaseUrl, supabaseKey);
         
-        await supabase
+        await client
           .from('jobs')
           .update({
             status: 'failed',
