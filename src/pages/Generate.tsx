@@ -391,7 +391,19 @@ const Generate = () => {
                     )}
                   </div>
                   
-                  <div className="flex gap-2 justify-center">
+                  <p className="text-sm text-center text-muted-foreground">
+                    ✓ Automatically saved to your Gallery
+                  </p>
+                  
+                  <div className="flex gap-2 justify-center flex-wrap">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      onClick={clearGeneration}
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      Generate New
+                    </Button>
                     <Button
                       variant="outline"
                       size="sm"
