@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Image as ImageIcon, Video, Upload, Sparkles } from "lucide-react";
+import { Loader2, Image as ImageIcon, Video, Upload, Sparkles, Download, ExternalLink } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
 
 // Image models for Replicate
 const IMAGE_MODELS = [
@@ -35,6 +36,15 @@ const ASPECT_RATIOS = [
   { value: "9:16", label: "9:16 (Portrait)" },
 ];
 
+interface GenerationResult {
+  jobId: string;
+  status: "pending" | "processing" | "succeeded" | "failed";
+  resultUrl?: string;
+  type: "image" | "video";
+  prompt: string;
+  errorMessage?: string;
+}
+
 const Generate = () => {
   const [user, setUser] = useState<any>(null);
   const [credits, setCredits] = useState(0);
@@ -46,10 +56,16 @@ const Generate = () => {
   const [aspectRatio, setAspectRatio] = useState("1:1");
   const [seed, setSeed] = useState("");
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [currentGeneration, setCurrentGeneration] = useState<GenerationResult | null>(null);
+  const [progress, setProgress] = useState(0);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
+    return () => {
+      if (pollingRef.current) clearInterval(pollingRef.current);
+    };
   }, []);
 
   // Reset model when mode changes
@@ -60,6 +76,21 @@ const Generate = () => {
       setModel("stable-video-diffusion");
     }
   }, [mode]);
+
+  // Simulate progress animation during generation
+  useEffect(() => {
+    if (currentGeneration?.status === "pending" || currentGeneration?.status === "processing") {
+      const interval = setInterval(() => {
+        setProgress((prev) => {
+          if (prev >= 90) return prev;
+          return prev + Math.random() * 10;
+        });
+      }, 1000);
+      return () => clearInterval(interval);
+    } else if (currentGeneration?.status === "succeeded") {
+      setProgress(100);
+    }
+  }, [currentGeneration?.status]);
 
   const checkAuth = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -79,6 +110,44 @@ const Generate = () => {
       .single();
     
     if (data) setCredits(data.balance);
+  };
+
+  const pollJobStatus = (jobId: string, type: "image" | "video", promptText: string) => {
+    if (pollingRef.current) clearInterval(pollingRef.current);
+    
+    pollingRef.current = setInterval(async () => {
+      const { data: job, error } = await supabase
+        .from("jobs")
+        .select("status, result_url, error_message")
+        .eq("id", jobId)
+        .single();
+
+      if (error) {
+        console.error("Error polling job:", error);
+        return;
+      }
+
+      setCurrentGeneration({
+        jobId,
+        status: job.status as GenerationResult["status"],
+        resultUrl: job.result_url || undefined,
+        type,
+        prompt: promptText,
+        errorMessage: job.error_message || undefined,
+      });
+
+      if (job.status === "succeeded" || job.status === "failed") {
+        if (pollingRef.current) clearInterval(pollingRef.current);
+        setIsGenerating(false);
+        fetchCredits(user.id);
+        
+        if (job.status === "succeeded") {
+          toast.success("Generation complete!");
+        } else {
+          toast.error(job.error_message || "Generation failed");
+        }
+      }
+    }, 2000);
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -115,7 +184,9 @@ const Generate = () => {
     }
 
     setIsGenerating(true);
-    toast.info("Job submitted! Processing...");
+    setProgress(0);
+    setCurrentGeneration(null);
+    toast.info("Starting generation...");
 
     try {
       // Upload file if needed
@@ -157,41 +228,70 @@ const Generate = () => {
 
       if (jobError) throw jobError;
 
+      const isVideo = mode === "text_to_video" || mode === "image_to_video";
+      
+      // Set initial generation state
+      setCurrentGeneration({
+        jobId: job.id,
+        status: "pending",
+        type: isVideo ? "video" : "image",
+        prompt,
+      });
+
+      // Start polling for status
+      pollJobStatus(job.id, isVideo ? "video" : "image", prompt);
+
       // Trigger appropriate function based on mode
       if (mode === "text_to_image" || mode === "image_to_image") {
-        // Trigger image generation
         supabase.functions.invoke('generate-image', {
           body: { jobId: job.id }
-        }).then(({ data, error }) => {
+        }).then(({ error }) => {
           if (error) {
             console.error('Processing error:', error);
             toast.error("Failed to start image generation");
           }
         });
-        toast.success("Generation started! Check your gallery in a moment.");
       } else if (mode === "text_to_video" || mode === "image_to_video") {
-        // Trigger video generation
         supabase.functions.invoke('generate-video', {
           body: { jobId: job.id }
-        }).then(({ data, error }) => {
+        }).then(({ error }) => {
           if (error) {
             console.error('Processing error:', error);
             toast.error("Failed to start video generation");
           }
         });
-        toast.success("Generation started! Check your gallery in a moment.");
       }
 
       setPrompt("");
       setUploadedFile(null);
-      
-      // Navigate to gallery after a brief delay
-      setTimeout(() => navigate("/gallery"), 1500);
     } catch (error: any) {
       toast.error(error.message || "Failed to start generation");
-    } finally {
       setIsGenerating(false);
+      setCurrentGeneration(null);
     }
+  };
+
+  const handleDownload = async (url: string, type: "image" | "video") => {
+    try {
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const downloadUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = downloadUrl;
+      a.download = `generation-${Date.now()}.${type === "video" ? "mp4" : "png"}`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(downloadUrl);
+      toast.success("Download started!");
+    } catch {
+      toast.error("Failed to download");
+    }
+  };
+
+  const clearGeneration = () => {
+    setCurrentGeneration(null);
+    setProgress(0);
   };
 
   if (!user) return null;
@@ -213,6 +313,114 @@ const Generate = () => {
             Generate stunning images and videos with AI-powered creativity
           </p>
         </div>
+
+        {/* Generation Preview Section */}
+        {currentGeneration && (
+          <Card className="mb-6 shadow-card border-border/50 bg-card/80 backdrop-blur-sm overflow-hidden animate-fade-in">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold">
+                  {currentGeneration.status === "succeeded" ? "Generation Complete" : "Generating..."}
+                </h3>
+                {currentGeneration.status === "succeeded" && (
+                  <Button variant="ghost" size="sm" onClick={clearGeneration}>
+                    Clear
+                  </Button>
+                )}
+              </div>
+
+              {(currentGeneration.status === "pending" || currentGeneration.status === "processing") && (
+                <div className="space-y-4">
+                  <div className="aspect-video bg-muted/50 rounded-lg flex flex-col items-center justify-center relative overflow-hidden">
+                    {/* Animated gradient background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-primary/20 via-accent/20 to-primary/20 animate-pulse" />
+                    <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(var(--primary),0.1),transparent_70%)]" />
+                    
+                    {/* Loading animation */}
+                    <div className="relative z-10 flex flex-col items-center gap-4">
+                      <div className="relative">
+                        <div className="w-20 h-20 border-4 border-primary/30 rounded-full animate-spin border-t-primary" />
+                        {currentGeneration.type === "video" ? (
+                          <Video className="absolute inset-0 m-auto h-8 w-8 text-primary" />
+                        ) : (
+                          <ImageIcon className="absolute inset-0 m-auto h-8 w-8 text-primary" />
+                        )}
+                      </div>
+                      <p className="text-sm text-muted-foreground text-center max-w-md">
+                        {currentGeneration.type === "video" 
+                          ? "Creating your video... This may take a few minutes."
+                          : "Creating your image..."}
+                      </p>
+                      <p className="text-xs text-muted-foreground/70 italic truncate max-w-sm">
+                        "{currentGeneration.prompt}"
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <Progress value={progress} className="h-2" />
+                    <p className="text-xs text-muted-foreground text-center">
+                      {currentGeneration.status === "pending" ? "Queued..." : "Processing..."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {currentGeneration.status === "succeeded" && currentGeneration.resultUrl && (
+                <div className="space-y-4">
+                  <div className="aspect-video bg-muted/50 rounded-lg overflow-hidden flex items-center justify-center">
+                    {currentGeneration.type === "video" ? (
+                      <video
+                        src={currentGeneration.resultUrl}
+                        controls
+                        autoPlay
+                        loop
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    ) : (
+                      <img
+                        src={currentGeneration.resultUrl}
+                        alt="Generated content"
+                        className="max-h-full max-w-full object-contain"
+                      />
+                    )}
+                  </div>
+                  
+                  <div className="flex gap-2 justify-center">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => handleDownload(currentGeneration.resultUrl!, currentGeneration.type)}
+                    >
+                      <Download className="h-4 w-4 mr-2" />
+                      Download
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate("/gallery")}
+                    >
+                      <ExternalLink className="h-4 w-4 mr-2" />
+                      View in Gallery
+                    </Button>
+                  </div>
+                </div>
+              )}
+
+              {currentGeneration.status === "failed" && (
+                <div className="aspect-video bg-destructive/10 rounded-lg flex flex-col items-center justify-center gap-4">
+                  <div className="text-destructive text-lg font-medium">Generation Failed</div>
+                  <p className="text-sm text-muted-foreground max-w-md text-center">
+                    {currentGeneration.errorMessage || "Something went wrong. Please try again."}
+                  </p>
+                  <Button variant="outline" size="sm" onClick={clearGeneration}>
+                    Try Again
+                  </Button>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
         <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm animate-slide-up">
           <CardContent className="p-6">
