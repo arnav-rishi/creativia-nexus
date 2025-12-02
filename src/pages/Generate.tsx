@@ -36,6 +36,15 @@ const ASPECT_RATIOS = [
   { value: "9:16", label: "9:16 (Portrait)" },
 ];
 
+const VIDEO_DURATIONS = [
+  { value: 4, label: "4 seconds", costMultiplier: 0.5 },
+  { value: 6, label: "6 seconds", costMultiplier: 0.75 },
+  { value: 8, label: "8 seconds", costMultiplier: 1 },
+];
+
+const BASE_VIDEO_COST = 10; // Base cost for 8-second video
+const IMAGE_COST = 5;
+
 interface GenerationResult {
   jobId: string;
   status: "pending" | "processing" | "succeeded" | "failed";
@@ -58,6 +67,7 @@ const Generate = () => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
   const [currentGeneration, setCurrentGeneration] = useState<GenerationResult | null>(null);
   const [progress, setProgress] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(8);
   const pollingRef = useRef<NodeJS.Timeout | null>(null);
   const navigate = useNavigate();
 
@@ -221,6 +231,7 @@ const Generate = () => {
             model,
             aspect_ratio: aspectRatio,
             seed: seed || null,
+            duration: mode.includes("video") ? videoDuration : null,
           },
         })
         .select()
@@ -297,7 +308,11 @@ const Generate = () => {
   if (!user) return null;
 
   const getCreditCost = () => {
-    return mode.includes("video") ? 10 : 5;
+    if (mode.includes("video")) {
+      const durationOption = VIDEO_DURATIONS.find(d => d.value === videoDuration);
+      return Math.ceil(BASE_VIDEO_COST * (durationOption?.costMultiplier || 1));
+    }
+    return IMAGE_COST;
   };
 
   return (
@@ -534,6 +549,27 @@ const Generate = () => {
                     </SelectContent>
                   </Select>
                 </div>
+
+                {mode.includes("video") && (
+                  <div className="space-y-2">
+                    <Label>Video Duration</Label>
+                    <Select value={videoDuration.toString()} onValueChange={(v) => setVideoDuration(Number(v))}>
+                      <SelectTrigger className="bg-input">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {VIDEO_DURATIONS.map((duration) => (
+                          <SelectItem key={duration.value} value={duration.value.toString()}>
+                            {duration.label} ({Math.ceil(BASE_VIDEO_COST * duration.costMultiplier)} credits)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                      Longer videos cost more credits
+                    </p>
+                  </div>
+                )}
 
                 {mode.includes("image") && (
                   <div className="space-y-2">
