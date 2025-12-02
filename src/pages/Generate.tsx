@@ -81,6 +81,11 @@ const Generate = () => {
     }
   }, [mode]);
 
+  // Log current generation state changes
+  useEffect(() => {
+    console.log("[Generate] currentGeneration changed:", currentGeneration);
+  }, [currentGeneration]);
+
   // Simulate progress animation during generation
   useEffect(() => {
     if (currentGeneration?.status === "pending" || currentGeneration?.status === "processing") {
@@ -119,6 +124,8 @@ const Generate = () => {
   const pollJobStatus = (jobId: string, type: "image" | "video", promptText: string) => {
     if (pollingRef.current) clearInterval(pollingRef.current);
     
+    console.log("[Generate] Starting poll for job:", jobId);
+    
     pollingRef.current = setInterval(async () => {
       const { data: job, error } = await supabase
         .from("jobs")
@@ -127,10 +134,12 @@ const Generate = () => {
         .single();
 
       if (error) {
-        console.error("Error polling job:", error);
+        console.error("[Generate] Error polling job:", error);
         return;
       }
 
+      console.log("[Generate] Poll result:", { status: job.status, hasUrl: !!job.result_url });
+      
       setCurrentGeneration({
         jobId,
         status: job.status as GenerationResult["status"],
@@ -141,6 +150,7 @@ const Generate = () => {
       });
 
       if (job.status === "succeeded" || job.status === "failed") {
+        console.log("[Generate] Job finished:", job.status, "URL:", job.result_url);
         if (pollingRef.current) clearInterval(pollingRef.current);
         setIsGenerating(false);
         fetchCredits(user.id);
