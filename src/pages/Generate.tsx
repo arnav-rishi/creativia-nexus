@@ -371,23 +371,30 @@ const Generate = () => {
                 </div>
               )}
 
-              {currentGeneration.status === "succeeded" && currentGeneration.resultUrl && (
+              {currentGeneration.status === "succeeded" && (
                 <div className="space-y-4">
                   <div className="aspect-video bg-muted/50 rounded-lg overflow-hidden flex items-center justify-center">
-                    {currentGeneration.type === "video" ? (
-                      <video
-                        src={currentGeneration.resultUrl}
-                        controls
-                        autoPlay
-                        loop
-                        className="max-h-full max-w-full object-contain"
-                      />
+                    {currentGeneration.resultUrl ? (
+                      currentGeneration.type === "video" ? (
+                        <video
+                          src={currentGeneration.resultUrl}
+                          controls
+                          autoPlay
+                          loop
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      ) : (
+                        <img
+                          src={currentGeneration.resultUrl}
+                          alt="Generated content"
+                          className="max-h-full max-w-full object-contain"
+                        />
+                      )
                     ) : (
-                      <img
-                        src={currentGeneration.resultUrl}
-                        alt="Generated content"
-                        className="max-h-full max-w-full object-contain"
-                      />
+                      <div className="flex flex-col items-center gap-4">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                        <p className="text-sm text-muted-foreground">Loading result...</p>
+                      </div>
                     )}
                   </div>
                   
@@ -404,14 +411,16 @@ const Generate = () => {
                       <Sparkles className="h-4 w-4 mr-2" />
                       Generate New
                     </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDownload(currentGeneration.resultUrl!, currentGeneration.type)}
-                    >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
-                    </Button>
+                    {currentGeneration.resultUrl && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDownload(currentGeneration.resultUrl!, currentGeneration.type)}
+                      >
+                        <Download className="h-4 w-4 mr-2" />
+                        Download
+                      </Button>
+                    )}
                     <Button
                       variant="outline"
                       size="sm"
