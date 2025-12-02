@@ -60,6 +60,7 @@ serve(async (req) => {
 
     const metadata = job.metadata || {};
     const model = metadata.model || 'stable-video-diffusion';
+    const duration = metadata.duration || 8; // Default to 8 seconds
     const provider = model.startsWith('sora-') ? 'openai' : 'replicate';
 
     console.log('Generating video...', { model, jobType: job.job_type, provider });
@@ -81,7 +82,7 @@ serve(async (req) => {
           model: model,
           prompt: job.prompt,
           size: '1280x720',
-          seconds: '8',
+          seconds: String(duration),
         }),
       });
 
@@ -245,7 +246,7 @@ serve(async (req) => {
       if (model === 'veo-3-fast' || model === 'pixverse-v4.5') {
         input = {
           prompt: job.prompt,
-          duration: 8, // Valid values: 4, 6, or 8 seconds
+          duration: duration, // Valid values: 4, 6, or 8 seconds
         };
         
         // Add model-specific parameters
