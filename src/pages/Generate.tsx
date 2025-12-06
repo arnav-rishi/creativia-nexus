@@ -353,18 +353,18 @@ const Generate = () => {
               </div>
             </div>}
 
-          {messages.map(message => <div key={message.id} className={`flex gap-3 sm:gap-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+          {messages.map(message => <div key={message.id} className={`flex gap-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               {message.role === "assistant" && <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0">
                   <Bot className="h-4 w-4 text-white" />
                 </div>}
               
-              <div className={`max-w-[85vw] sm:max-w-xl md:max-w-2xl lg:max-w-3xl ${message.role === "user" ? "order-first" : ""}`}>
+              <div className={`max-w-2xl ${message.role === "user" ? "order-first" : ""}`}>
                 {message.role === "user" ? <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3">
                     <p className="text-sm">{message.content}</p>
                   </div> : <div className="bg-muted/50 border border-border/40 rounded-2xl rounded-tl-sm overflow-hidden">
                     {/* Loading state */}
-                    {(message.status === "pending" || message.status === "processing") && <div className="p-4 sm:p-6 space-y-4">
-                        <div className="aspect-video w-full max-w-lg mx-auto bg-background/50 rounded-xl flex items-center justify-center relative overflow-hidden">
+                    {(message.status === "pending" || message.status === "processing") && <div className="p-6 space-y-4">
+                        <div className="aspect-video bg-background/50 rounded-xl flex items-center justify-center relative overflow-hidden">
                           <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-secondary/10 to-primary/10 animate-pulse" />
                           <div className="relative z-10 flex flex-col items-center gap-3">
                             <Loader2 className="h-8 w-8 animate-spin text-primary" />
@@ -377,15 +377,15 @@ const Generate = () => {
 
                     {/* Success state */}
                     {message.status === "completed" && message.imageUrl && <div className="space-y-3">
-                        <div className="w-full flex items-center justify-center p-2 sm:p-4">
-                          {message.type === "video" ? <video src={message.imageUrl} controls autoPlay loop className="max-h-[60vh] w-auto max-w-full object-contain rounded-lg" /> : <img src={message.imageUrl} alt="Generated content" className="max-h-[60vh] w-auto max-w-full object-contain rounded-lg" />}
+                        <div className="aspect-video bg-background/50 flex items-center justify-center">
+                          {message.type === "video" ? <video src={message.imageUrl} controls autoPlay loop className="max-h-full max-w-full object-contain" /> : <img src={message.imageUrl} alt="Generated content" className="max-h-full max-w-full object-contain" />}
                         </div>
-                        <div className="px-3 sm:px-4 pb-3 sm:pb-4 flex gap-2 flex-wrap">
+                        <div className="px-4 pb-4 flex gap-2 flex-wrap">
                           <Button size="sm" variant="ghost" onClick={() => handleDownload(message.imageUrl!, message.type as "image" | "video")} className="text-xs">
                             <Download className="h-3.5 w-3.5 mr-1.5" />
                             Download
                           </Button>
-                          {message.jobId && <Button size="sm" variant="outline" onClick={() => handleShare(message.jobId!)} className="text-xs border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground">
+                          {message.jobId && <Button size="sm" variant="ghost" onClick={() => handleShare(message.jobId!)} className="text-xs">
                               <Share2 className="h-3.5 w-3.5 mr-1.5" />
                               Share
                             </Button>}
@@ -393,9 +393,9 @@ const Generate = () => {
                       </div>}
 
                     {/* Error state */}
-                    {message.status === "failed" && <div className="p-4 sm:p-6">
-                        <div className="aspect-video max-w-lg mx-auto bg-destructive/10 rounded-xl flex items-center justify-center">
-                          <div className="text-center space-y-2 p-4">
+                    {message.status === "failed" && <div className="p-6">
+                        <div className="aspect-video bg-destructive/10 rounded-xl flex items-center justify-center">
+                          <div className="text-center space-y-2">
                             <X className="h-8 w-8 text-destructive mx-auto" />
                             <p className="text-sm text-destructive">
                               {message.errorMessage || "Generation failed"}
