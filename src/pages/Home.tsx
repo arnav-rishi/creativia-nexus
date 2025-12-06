@@ -122,8 +122,8 @@ const Home = () => {
       </section>
 
       {/* Capability Cards Section */}
-      <section className="relative z-10 py-24 px-6">
-        <div className="max-w-6xl mx-auto">
+      <section className="relative z-10 py-24 px-6 lg:px-12 xl:px-20">
+        <div className="w-full max-w-[1800px] mx-auto">
           {/* Section Header */}
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -142,8 +142,8 @@ const Home = () => {
       </section>
 
       {/* Model Showcase Section */}
-      <section className="relative z-10 py-24 px-6 bg-card/20">
-        <div className="max-w-7xl mx-auto">
+      <section className="relative z-10 py-24 px-6 lg:px-12 xl:px-20 bg-card/20">
+        <div className="w-full max-w-[1800px] mx-auto">
           {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -160,8 +160,8 @@ const Home = () => {
       </section>
 
       {/* Example Generations Section */}
-      <section className="relative z-10 py-24 px-6">
-        <div className="max-w-6xl mx-auto">
+      <section className="relative z-10 py-24 px-6 lg:px-12 xl:px-20">
+        <div className="w-full max-w-[1800px] mx-auto">
           {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
@@ -178,8 +178,8 @@ const Home = () => {
       </section>
 
       {/* Community Gallery Section */}
-      <section id="community" className="relative z-10 py-24 px-6 bg-card/20 scroll-mt-20">
-        <div className="max-w-7xl mx-auto">
+      <section id="community" className="relative z-10 py-24 px-6 lg:px-12 xl:px-20 bg-card/20 scroll-mt-20">
+        <div className="w-full max-w-[1800px] mx-auto">
           {/* Section Header */}
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
