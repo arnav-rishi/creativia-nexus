@@ -75,23 +75,23 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
 
   return (
     <nav className={`bg-transparent sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="w-full px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between gap-2">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3 group">
-          <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center group-hover:scale-105 transition-transform shadow-lg shadow-primary/20">
-            <Sparkles className="h-5 w-5 text-white" />
+        <Link to="/" className="flex items-center gap-2 sm:gap-3 group flex-shrink-0">
+          <div className="h-8 w-8 sm:h-10 sm:w-10 rounded-xl bg-gradient-primary flex items-center justify-center group-hover:scale-105 transition-transform shadow-lg shadow-primary/20">
+            <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-white" />
           </div>
-          <span className="text-lg font-semibold text-foreground tracking-tight">
+          <span className="text-base sm:text-lg font-semibold text-foreground tracking-tight hidden xs:block">
             AI Studio
           </span>
         </Link>
 
-        {/* Center Navigation */}
-        <div className="hidden md:flex items-center gap-1">
+        {/* Center Navigation - Hidden on smaller screens */}
+        <div className="hidden lg:flex items-center gap-1 flex-shrink-0">
           <Link
             to="/"
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all",
+              "px-3 xl:px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
               isActive("/")
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -105,7 +105,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
               <NavigationMenuItem>
                 <NavigationMenuTrigger 
                   className={cn(
-                    "px-4 py-2 h-auto rounded-full text-sm font-medium bg-transparent hover:bg-muted/50 data-[state=open]:bg-foreground data-[state=open]:text-background",
+                    "px-3 xl:px-4 py-2 h-auto rounded-full text-sm font-medium bg-transparent hover:bg-muted/50 data-[state=open]:bg-foreground data-[state=open]:text-background whitespace-nowrap",
                     isActive("/generate") ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
@@ -171,7 +171,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
           <Link
             to="/gallery"
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all",
+              "px-3 xl:px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
               isActive("/gallery")
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -183,7 +183,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
           <Link
             to="/jobs"
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all",
+              "px-3 xl:px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
               isActive("/jobs")
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -195,7 +195,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
           <Link
             to="/pricing"
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-medium transition-all",
+              "px-3 xl:px-4 py-2 rounded-full text-sm font-medium transition-all whitespace-nowrap",
               isActive("/pricing")
                 ? "bg-foreground text-background"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
@@ -206,29 +206,29 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
         </div>
 
         {/* Right side */}
-        <div className="flex items-center gap-3">
-          {/* Credits badge */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/30">
-            <CreditCard className="h-3.5 w-3.5 text-primary" />
-            <span className="text-sm font-medium">{credits}</span>
-            <span className="text-xs text-muted-foreground">credits</span>
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {/* Credits badge - responsive */}
+          <div className="flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1 sm:py-1.5 rounded-full bg-muted/30 border border-border/30">
+            <CreditCard className="h-3 sm:h-3.5 w-3 sm:w-3.5 text-primary" />
+            <span className="text-xs sm:text-sm font-medium">{credits}</span>
+            <span className="text-xs text-muted-foreground hidden sm:inline">credits</span>
           </div>
 
-          {/* Generate CTA */}
+          {/* Generate CTA - hidden on mobile */}
           <Button
             variant="outline"
             size="sm"
             onClick={() => navigate("/generate")}
-            className="hidden sm:inline-flex rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground gap-1.5"
+            className="hidden md:inline-flex rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground gap-1.5 text-xs sm:text-sm"
           >
-            Create <ArrowUpRight className="h-3.5 w-3.5" />
+            Create <ArrowUpRight className="h-3 sm:h-3.5 w-3 sm:w-3.5" />
           </Button>
 
           {/* User Menu */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:bg-muted/50">
-                <Avatar className="h-9 w-9">
+              <Button variant="ghost" className="relative h-8 w-8 sm:h-9 sm:w-9 rounded-full p-0 hover:bg-muted/50">
+                <Avatar className="h-8 w-8 sm:h-9 sm:w-9">
                   <AvatarFallback className="bg-gradient-primary text-xs font-medium text-white">
                     {user.email?.[0].toUpperCase()}
                   </AvatarFallback>
@@ -244,8 +244,8 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-border/30" />
               
-              {/* Mobile nav items */}
-              <div className="md:hidden">
+              {/* Mobile/tablet nav items - visible until lg */}
+              <div className="lg:hidden">
                 <DropdownMenuItem onClick={() => navigate("/")} className="text-sm">
                   <Sparkles className="mr-2 h-4 w-4" />
                   Home
