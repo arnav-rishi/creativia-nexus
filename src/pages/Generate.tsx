@@ -559,14 +559,14 @@ const Generate = () => {
       {/* Desktop Layout with Resizable Sidebar */}
       <div className="hidden md:flex w-full h-screen">
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={20} minSize={15} maxSize={35} className="z-10">
+          <ResizablePanel defaultSize={25} minSize={18} maxSize={40} className="z-10">
             <aside className="flex flex-col h-full border-r border-border/40 bg-background/80 backdrop-blur-xl">
               <SidebarContent />
             </aside>
           </ResizablePanel>
           <ResizableHandle withHandle className="bg-border/40 hover:bg-primary/50 transition-colors" />
 
-          <ResizablePanel defaultSize={80}>
+          <ResizablePanel defaultSize={75}>
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               {/* Hidden file input */}
