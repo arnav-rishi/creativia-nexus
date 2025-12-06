@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Download, User, Lock } from "lucide-react";
 import { Link } from "react-router-dom";
+import { toast } from "sonner";
 
 interface SharedGeneration {
   id: string;
@@ -46,18 +47,19 @@ const CommunityGallery = ({ isAuthenticated }: CommunityGalleryProps) => {
 
       setGenerations(data || []);
       
-      // Fetch creator names separately
+      // Fetch creator usernames from public_profiles view
       if (data && data.length > 0) {
         const userIds = [...new Set(data.map(g => g.user_id))];
         const { data: profiles } = await supabase
-          .from("profiles")
-          .select("id, full_name, email")
+          .from("public_profiles")
+          .select("id, username, full_name")
           .in("id", userIds);
         
         if (profiles) {
           const names: Record<string, string> = {};
           profiles.forEach(p => {
-            names[p.id] = p.full_name || p.email.split("@")[0] || "Anonymous";
+            // Prefer username, fall back to full_name, then "Anonymous"
+            names[p.id as string] = p.username || p.full_name || "Anonymous";
           });
           setCreatorNames(names);
         }
@@ -95,8 +97,10 @@ const CommunityGallery = ({ isAuthenticated }: CommunityGalleryProps) => {
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
+      toast.success("Download started");
     } catch (error) {
       console.error("Download failed:", error);
+      toast.error("Download failed");
     }
   };
 
@@ -119,26 +123,26 @@ const CommunityGallery = ({ isAuthenticated }: CommunityGalleryProps) => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary"></div>
+      <div className="flex items-center justify-center py-16">
+        <div className="w-8 h-8 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
       </div>
     );
   }
 
   if (generations.length === 0) {
     return (
-      <div className="text-center py-12">
-        <p className="text-muted-foreground">No shared creations yet. Be the first to share!</p>
+      <div className="text-center py-16">
+        <p className="text-body text-muted-foreground">No shared creations yet. Be the first to share!</p>
       </div>
     );
   }
 
   return (
-    <div className="columns-2 md:columns-3 lg:columns-4 xl:columns-5 gap-4 space-y-4">
+    <div className="columns-1 sm:columns-2 lg:columns-3 xl:columns-4 gap-5 space-y-5">
       {generations.map((generation) => (
         <Card
           key={generation.id}
-          className="break-inside-avoid overflow-hidden bg-card/50 border-border/50 hover:border-primary/50 transition-all duration-300 group"
+          className="break-inside-avoid overflow-hidden bg-card/40 border-border/30 hover:border-border/60 transition-all duration-300 group backdrop-blur-sm"
         >
           <div className="relative">
             {generation.generation_type.includes("video") ? (
@@ -163,35 +167,39 @@ const CommunityGallery = ({ isAuthenticated }: CommunityGalleryProps) => {
               />
             )}
             
-            {/* Overlay with prompt */}
-            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              <div className="absolute bottom-0 left-0 right-0 p-3">
-                <p className="text-white text-xs line-clamp-3 mb-2">
+            {/* Overlay with prompt and actions */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                {/* Prompt */}
+                <p className="text-white/90 text-caption line-clamp-3 mb-3 leading-relaxed">
                   {generation.prompt}
                 </p>
+                
+                {/* Creator and Download */}
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5 text-white/70 text-xs">
-                    <User className="h-3 w-3" />
-                    <span>{creatorNames[generation.user_id] || "Anonymous"}</span>
+                  <div className="flex items-center gap-2 text-white/60">
+                    <User className="h-3.5 w-3.5" />
+                    <span className="text-caption">@{creatorNames[generation.user_id] || "anonymous"}</span>
                   </div>
+                  
                   {isAuthenticated ? (
                     <Button
                       size="sm"
                       variant="ghost"
-                      className="h-7 px-2 text-white hover:bg-white/20"
+                      className="h-8 px-3 text-white/80 hover:text-white hover:bg-white/10"
                       onClick={() => handleDownload(generation)}
                     >
-                      <Download className="h-3.5 w-3.5" />
+                      <Download className="h-4 w-4" />
                     </Button>
                   ) : (
                     <Link to="/auth">
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-7 px-2 text-white hover:bg-white/20"
+                        className="h-8 px-3 text-white/70 hover:text-white hover:bg-white/10 gap-1.5"
                       >
-                        <Lock className="h-3.5 w-3.5 mr-1" />
-                        <span className="text-xs">Sign in</span>
+                        <Lock className="h-3.5 w-3.5" />
+                        <span className="text-caption">Sign in</span>
                       </Button>
                     </Link>
                   )}

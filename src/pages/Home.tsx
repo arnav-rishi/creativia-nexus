@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import NeonBackground from "@/components/NeonBackground";
 import GlassCard from "@/components/GlassCard";
 import Navbar from "@/components/Navbar";
+import CommunityGallery from "@/components/CommunityGallery";
 
 type GenerationMode = "text" | "image" | null;
 
@@ -60,7 +61,8 @@ const Home = () => {
       <NeonBackground />
       <Navbar credits={isAuthenticated ? credits : undefined} />
 
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6">
+      {/* Hero Section */}
+      <section className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6">
         <div
           className={`flex flex-col items-center w-full max-w-5xl transition-all duration-500 ${
             isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"
@@ -164,7 +166,23 @@ const Home = () => {
             )}
           </nav>
         </div>
-      </div>
+      </section>
+
+      {/* Community Gallery Section */}
+      <section className="relative z-10 py-section px-6">
+        <div className="max-w-7xl mx-auto">
+          {/* Section Header */}
+          <div className="text-center mb-12">
+            <h2 className="text-heading text-gradient mb-3">Community Creations</h2>
+            <p className="text-body text-muted-foreground max-w-md mx-auto">
+              Explore what others are creating with AI. Get inspired and share your own.
+            </p>
+          </div>
+
+          {/* Gallery */}
+          <CommunityGallery isAuthenticated={isAuthenticated} />
+        </div>
+      </section>
     </div>
   );
 };
