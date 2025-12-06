@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sparkles, LogOut, Image, User, CreditCard, Clock, ArrowUpRight, Zap, Video, ImageIcon, ChevronDown } from "lucide-react";
+import { Sparkles, LogOut, Image, User, CreditCard, Clock, ArrowUpRight, Zap, Video, ImageIcon, ChevronDown, Users } from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -73,7 +73,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
 
   return (
     <nav className={`bg-transparent sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-      <div className="container mx-auto px-6 py-4 flex items-center justify-between">
+      <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12 xl:px-16 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
           <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center group-hover:scale-105 transition-transform shadow-lg shadow-primary/20">
@@ -201,6 +201,13 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
           >
             Pricing
           </Link>
+
+          <a
+            href="/#community"
+            className="px-4 py-2 rounded-full text-sm font-medium transition-all text-muted-foreground hover:text-foreground hover:bg-muted/50"
+          >
+            Community
+          </a>
         </div>
 
         {/* Right side */}
