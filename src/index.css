@@ -25,7 +25,68 @@
 
 @layer base {
   :root {
-    /* Core Colors */
+    /* Light Mode - Clean B/W */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 5%;
+
+    --card: 0 0% 98%;
+    --card-foreground: 0 0% 5%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+
+    --primary: 270 95% 55%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 40%;
+
+    --accent: 330 85% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 95%;
+    --ring: 270 95% 55%;
+
+    --radius: 0.75rem;
+
+    /* Accent Colors */
+    --neon-violet: 270 95% 55%;
+    --neon-pink: 330 85% 60%;
+    --neon-blue: 210 100% 55%;
+    --neon-cyan: 185 100% 50%;
+
+    /* Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(270 95% 55%), hsl(330 85% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 100% 55%), hsl(270 95% 55%));
+    --gradient-text: linear-gradient(135deg, hsl(0 0% 20%), hsl(0 0% 40%));
+    --gradient-subtle: linear-gradient(180deg, hsl(0 0% 100%), hsl(0 0% 98%));
+    
+    /* Shadows */
+    --shadow-glow: 0 0 60px hsl(270 95% 55% / 0.1);
+    --shadow-glow-pink: 0 0 60px hsl(330 85% 60% / 0.1);
+    --shadow-glow-blue: 0 0 60px hsl(210 100% 55% / 0.1);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.08);
+    --shadow-soft: 0 2px 12px hsl(0 0% 0% / 0.05);
+    
+    /* Timing */
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    /* Glass - Light Mode */
+    --glass-bg: hsl(0 0% 0% / 0.02);
+    --glass-border: hsl(0 0% 0% / 0.06);
+    --glass-blur: 24px;
+  }
+
+  .dark {
+    /* Dark Mode - Original Theme */
     --background: 240 10% 4%;
     --foreground: 0 0% 98%;
 
@@ -54,8 +115,6 @@
     --input: 240 8% 12%;
     --ring: 270 95% 65%;
 
-    --radius: 0.75rem;
-
     /* Accent Colors - Subtle Neon */
     --neon-violet: 270 95% 65%;
     --neon-pink: 330 85% 60%;
@@ -74,12 +133,8 @@
     --shadow-glow-blue: 0 0 60px hsl(210 100% 55% / 0.15);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
     --shadow-soft: 0 2px 12px hsl(0 0% 0% / 0.25);
-    
-    /* Timing */
-    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-bounce: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    /* Glass - More Subtle */
+    /* Glass - Dark Mode */
     --glass-bg: hsl(0 0% 100% / 0.02);
     --glass-border: hsl(0 0% 100% / 0.06);
     --glass-blur: 24px;
