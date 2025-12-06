@@ -80,7 +80,7 @@ const Home = () => {
       <Navbar credits={isAuthenticated ? credits : undefined} />
 
       {/* Hero Section - Clean Apple-inspired */}
-      <section className="relative z-10 flex flex-col items-center justify-center min-h-[70vh] px-6 pt-24 pb-16 py-[9px]">
+      <section className="relative z-10 flex-col min-h-[70vh] px-6 pt-24 pb-16 py-[9px] flex items-center justify-start">
         <div className="flex flex-col items-center w-full max-w-4xl text-center">
           {/* Badge */}
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/5 border border-primary/10 mb-8 animate-fade-in">
