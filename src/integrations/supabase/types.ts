@@ -79,33 +79,39 @@ export type Database = {
           created_at: string | null
           generation_type: string
           id: string
+          is_shared: boolean | null
           job_id: string
           metadata: Json | null
           prompt: string
           provider: string
           result_url: string
+          shared_at: string | null
           user_id: string
         }
         Insert: {
           created_at?: string | null
           generation_type: string
           id?: string
+          is_shared?: boolean | null
           job_id: string
           metadata?: Json | null
           prompt: string
           provider: string
           result_url: string
+          shared_at?: string | null
           user_id: string
         }
         Update: {
           created_at?: string | null
           generation_type?: string
           id?: string
+          is_shared?: boolean | null
           job_id?: string
           metadata?: Json | null
           prompt?: string
           provider?: string
           result_url?: string
+          shared_at?: string | null
           user_id?: string
         }
         Relationships: [

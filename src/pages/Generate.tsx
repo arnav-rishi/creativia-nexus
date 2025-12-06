@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
-import { Loader2, Image as ImageIcon, Video, Upload, Sparkles, Download, ExternalLink } from "lucide-react";
+import { Loader2, Image as ImageIcon, Video, Upload, Sparkles, Download, ExternalLink, Share2 } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
 
 // Image models for Replicate
@@ -304,6 +304,36 @@ const Generate = () => {
     }
   };
 
+  const handleShare = async (jobId: string) => {
+    try {
+      // Find the generation for this job and mark it as shared
+      const { data: generation, error: fetchError } = await supabase
+        .from("generations")
+        .select("id")
+        .eq("job_id", jobId)
+        .single();
+
+      if (fetchError || !generation) {
+        toast.error("Could not find generation to share");
+        return;
+      }
+
+      const { error } = await supabase
+        .from("generations")
+        .update({ is_shared: true, shared_at: new Date().toISOString() })
+        .eq("id", generation.id);
+
+      if (error) {
+        toast.error("Failed to share");
+        return;
+      }
+
+      toast.success("Shared to community gallery!");
+    } catch (error) {
+      toast.error("Failed to share");
+    }
+  };
+
   const clearGeneration = () => {
     setCurrentGeneration(null);
     setProgress(0);
@@ -415,6 +445,14 @@ const Generate = () => {
                   <div className="flex gap-2 justify-center flex-wrap">
                     <Button
                       variant="default"
+                      size="sm"
+                      onClick={() => handleShare(currentGeneration.jobId)}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      Share to Community
+                    </Button>
+                    <Button
+                      variant="outline"
                       size="sm"
                       onClick={clearGeneration}
                     >

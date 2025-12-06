@@ -5,7 +5,7 @@ import Navbar from "@/components/Navbar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Loader2, Download, Trash2, Clock, CheckCircle2, XCircle, Image as ImageIcon } from "lucide-react";
+import { Loader2, Download, Trash2, Share2, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 
 interface Generation {
@@ -15,6 +15,7 @@ interface Generation {
   provider: string;
   generation_type: string;
   created_at: string;
+  is_shared: boolean;
 }
 
 interface GenerationWithUrl extends Generation {
@@ -240,6 +241,26 @@ const Gallery = () => {
     }
   };
 
+  const handleShare = async (generationId: string, currentlyShared: boolean) => {
+    const { error } = await supabase
+      .from("generations")
+      .update({ 
+        is_shared: !currentlyShared, 
+        shared_at: !currentlyShared ? new Date().toISOString() : null 
+      })
+      .eq("id", generationId);
+
+    if (error) {
+      toast.error("Failed to update");
+      return;
+    }
+
+    setGenerations(generations.map(g => 
+      g.id === generationId ? { ...g, is_shared: !currentlyShared } : g
+    ));
+    toast.success(currentlyShared ? "Removed from community" : "Shared to community!");
+  };
+
   if (!user) return null;
 
   return (
@@ -317,13 +338,20 @@ const Gallery = () => {
                   </div>
                   <div className="flex gap-2">
                     <Button
-                      variant="outline"
+                      variant={gen.is_shared ? "secondary" : "outline"}
                       size="sm"
                       className="flex-1"
+                      onClick={() => handleShare(gen.id, gen.is_shared)}
+                    >
+                      <Share2 className="h-4 w-4 mr-2" />
+                      {gen.is_shared ? "Shared" : "Share"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
                       onClick={() => handleDownload(gen.result_url, gen.prompt, gen.generation_type)}
                     >
-                      <Download className="h-4 w-4 mr-2" />
-                      Download
+                      <Download className="h-4 w-4" />
                     </Button>
                     <Button
                       variant="destructive"
