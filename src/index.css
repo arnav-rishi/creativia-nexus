@@ -217,15 +217,10 @@
   /* Neon Blobs - Subtler */
   .neon-blob {
     position: absolute;
-    filter: blur(80px);
-    opacity: 0.55;
+    filter: blur(100px);
+    opacity: 0.35;
     border-radius: 50%;
     pointer-events: none;
-  }
-  
-  .dark .neon-blob {
-    opacity: 0.65;
-    filter: blur(70px);
   }
 
   .blob-violet {
