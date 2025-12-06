@@ -44,11 +44,7 @@ const Home = () => {
   };
 
   const fetchCredits = async (userId: string) => {
-    const { data } = await supabase
-      .from("credits")
-      .select("balance")
-      .eq("user_id", userId)
-      .single();
+    const { data } = await supabase.from("credits").select("balance").eq("user_id", userId).single();
     if (data) setCredits(data.balance);
   };
 
@@ -73,11 +69,9 @@ const Home = () => {
   return (
     <div className="min-h-screen bg-background relative">
       <NeonBackground />
-      
+
       {/* Only show navbar on landing view */}
-      {view === "landing" && (
-        <Navbar credits={isAuthenticated ? credits : undefined} />
-      )}
+      {view === "landing" && <Navbar credits={isAuthenticated ? credits : undefined} />}
 
       <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
         {/* Landing View */}
@@ -91,9 +85,7 @@ const Home = () => {
             <div className="text-center mb-12 animate-fade-in-up">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel mb-6">
                 <Sparkles size={16} className="text-primary" />
-                <span className="text-sm font-medium text-muted-foreground">
-                  Next-Gen AI Creation
-                </span>
+                <span className="text-sm font-medium text-muted-foreground">Next-Gen AI Creation</span>
               </div>
               <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-pink-200 to-blue-200 leading-tight drop-shadow-lg mb-4">
                 Create Impossible
@@ -112,18 +104,14 @@ const Home = () => {
                 onClick={() => handleCardSelection("text")}
                 glowColor="violet"
                 isAnimating={animatingCard === "text"}
-                className={`flex-1 h-80 md:max-w-md ${
-                  animatingCard === "image" ? "opacity-0 scale-90" : ""
-                }`}
+                className={`flex-1 h-80 md:max-w-md ${animatingCard === "image" ? "opacity-0 scale-90" : ""}`}
               >
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border group-hover:border-primary/50 transition-colors">
                   <Type size={32} className="text-primary" />
                 </div>
 
                 <div className="relative z-10 mt-auto">
-                  <h3 className="text-2xl font-bold mb-2 text-foreground">
-                    Start with Text
-                  </h3>
+                  <h3 className="text-2xl font-bold mb-2 text-foreground">Start with Text</h3>
                   <p className="text-muted-foreground text-sm">
                     Transform words into stunning Images or Videos. Perfect for detailed prompts and creative scripts.
                   </p>
@@ -139,18 +127,14 @@ const Home = () => {
                 onClick={() => handleCardSelection("image")}
                 glowColor="pink"
                 isAnimating={animatingCard === "image"}
-                className={`flex-1 h-80 md:max-w-md ${
-                  animatingCard === "text" ? "opacity-0 scale-90" : ""
-                }`}
+                className={`flex-1 h-80 md:max-w-md ${animatingCard === "text" ? "opacity-0 scale-90" : ""}`}
               >
                 <div className="p-4 rounded-2xl bg-foreground/5 border border-border group-hover:border-accent/50 transition-colors">
                   <Image size={32} className="text-accent" />
                 </div>
 
                 <div className="relative z-10 mt-auto">
-                  <h3 className="text-2xl font-bold mb-2 text-foreground">
-                    Start with Image
-                  </h3>
+                  <h3 className="text-2xl font-bold mb-2 text-foreground">Generate with Image</h3>
                   <p className="text-muted-foreground text-sm">
                     Upload to animate, edit, or transform existing visuals using AI-powered generation.
                   </p>
@@ -193,9 +177,7 @@ const Home = () => {
         )}
 
         {/* Workspace View */}
-        {view === "workspace" && selectedMode && (
-          <PromptWorkspace mode={selectedMode} onBack={handleBack} />
-        )}
+        {view === "workspace" && selectedMode && <PromptWorkspace mode={selectedMode} onBack={handleBack} />}
       </div>
     </div>
   );
