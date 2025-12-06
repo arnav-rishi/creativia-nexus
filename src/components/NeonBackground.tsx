@@ -1,59 +1,30 @@
-import { useEffect, useState } from "react";
-
 const NeonBackground = () => {
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({
-        x: (e.clientX / window.innerWidth) * 100,
-        y: (e.clientY / window.innerHeight) * 100,
-      });
-    };
-
-    window.addEventListener("mousemove", handleMouseMove);
-    return () => window.removeEventListener("mousemove", handleMouseMove);
-  }, []);
-
   return (
     <div className="fixed inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Animated Neon Blobs */}
+      {/* Gradient overlay for depth */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
+      
+      {/* Subtle neon blobs - reduced opacity and smoother */}
       <div
         className="neon-blob blob-violet w-[600px] h-[600px]"
-        style={{
-          top: "-150px",
-          left: "-100px",
-          transform: `translate(${mousePosition.x * 0.02}px, ${mousePosition.y * 0.02}px)`,
-        }}
+        style={{ top: "-200px", left: "-150px" }}
       />
       <div
-        className="neon-blob blob-pink w-[500px] h-[500px]"
-        style={{
-          bottom: "-100px",
-          right: "-50px",
-          transform: `translate(${-mousePosition.x * 0.015}px, ${-mousePosition.y * 0.015}px)`,
-        }}
+        className="neon-blob blob-pink w-[450px] h-[450px]"
+        style={{ bottom: "-100px", right: "-100px" }}
       />
       <div
-        className="neon-blob blob-blue w-[400px] h-[400px]"
-        style={{
-          top: "35%",
-          left: "50%",
-          marginLeft: "-200px",
-          transform: `translate(${mousePosition.x * 0.03}px, ${mousePosition.y * 0.03}px)`,
-        }}
-      />
-      <div
-        className="neon-blob blob-cyan w-[350px] h-[350px] opacity-40"
-        style={{
-          top: "60%",
-          left: "20%",
-          transform: `translate(${-mousePosition.x * 0.025}px, ${mousePosition.y * 0.02}px)`,
-        }}
+        className="neon-blob blob-blue w-[350px] h-[350px]"
+        style={{ top: "40%", left: "30%" }}
       />
       
-      {/* Subtle overlay for depth */}
-      <div className="absolute inset-0 bg-background/20 backdrop-blur-[1px]" />
+      {/* Subtle grain texture */}
+      <div 
+        className="absolute inset-0 opacity-[0.012]"
+        style={{
+          backgroundImage: `url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E")`,
+        }}
+      />
     </div>
   );
 };

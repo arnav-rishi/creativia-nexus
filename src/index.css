@@ -2,64 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* 
+  Apple-Inspired Design System
+  
+  TEXT HIERARCHY (4 sizes only):
+  - Hero: text-hero (48-80px) - Main page titles
+  - Heading: text-heading (24-32px) - Section headings
+  - Body: text-body (16-18px) - Paragraphs, descriptions
+  - Caption: text-caption (12-14px) - Labels, secondary info
+  
+  SPACING RHYTHM:
+  - Section gaps: space-section (80-120px)
+  - Group gaps: space-group (32-48px)
+  - Element gaps: space-element (16-24px)
+  - Tight gaps: space-tight (8-12px)
+  
+  FONT WEIGHTS:
+  - Regular (400) - Body text
+  - Medium (500) - Emphasis
+  - Semibold (600) - Headings
 */
 
 @layer base {
   :root {
-    --background: 240 10% 3%;
+    /* Core Colors */
+    --background: 240 10% 4%;
     --foreground: 0 0% 98%;
 
-    --card: 240 10% 5%;
+    --card: 240 10% 6%;
     --card-foreground: 0 0% 98%;
 
-    --popover: 240 10% 5%;
+    --popover: 240 10% 6%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 270 100% 65%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 270 95% 65%;
+    --primary-foreground: 0 0% 100%;
 
-    --secondary: 200 100% 50%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 210 100% 55%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 5% 15%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 240 5% 18%;
+    --muted-foreground: 240 5% 55%;
 
-    --accent: 330 90% 60%;
-    --accent-foreground: 0 0% 98%;
+    --accent: 330 85% 60%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 240 10% 20%;
-    --input: 240 10% 15%;
-    --ring: 270 100% 65%;
+    --border: 240 8% 18%;
+    --input: 240 8% 12%;
+    --ring: 270 95% 65%;
 
-    --radius: 1rem;
+    --radius: 0.75rem;
 
-    /* Neon RGB Colors */
-    --neon-violet: 270 100% 65%;
-    --neon-pink: 330 90% 60%;
+    /* Accent Colors - Subtle Neon */
+    --neon-violet: 270 95% 65%;
+    --neon-pink: 330 85% 60%;
     --neon-blue: 210 100% 55%;
-    --neon-cyan: 180 100% 50%;
+    --neon-cyan: 185 100% 50%;
 
-    --gradient-primary: linear-gradient(135deg, hsl(270 100% 65%), hsl(330 90% 60%));
-    --gradient-secondary: linear-gradient(135deg, hsl(210 100% 55%), hsl(270 100% 65%));
-    --gradient-accent: linear-gradient(90deg, hsl(270 100% 65%), hsl(210 100% 55%), hsl(330 90% 60%));
-    --gradient-neon: linear-gradient(135deg, hsl(270 100% 60%), hsl(210 100% 55%));
+    /* Gradients - Premium & Subtle */
+    --gradient-primary: linear-gradient(135deg, hsl(270 95% 65%), hsl(330 85% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 100% 55%), hsl(270 95% 65%));
+    --gradient-text: linear-gradient(135deg, hsl(0 0% 95%), hsl(240 10% 80%));
+    --gradient-subtle: linear-gradient(180deg, hsl(240 10% 6%), hsl(240 10% 4%));
     
-    --shadow-glow: 0 0 40px hsl(270 100% 65% / 0.4);
-    --shadow-glow-pink: 0 0 40px hsl(330 90% 60% / 0.4);
-    --shadow-glow-blue: 0 0 40px hsl(210 100% 55% / 0.4);
-    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.5);
+    /* Shadows - Refined */
+    --shadow-glow: 0 0 60px hsl(270 95% 65% / 0.15);
+    --shadow-glow-pink: 0 0 60px hsl(330 85% 60% / 0.15);
+    --shadow-glow-blue: 0 0 60px hsl(210 100% 55% / 0.15);
+    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
+    --shadow-soft: 0 2px 12px hsl(0 0% 0% / 0.25);
     
-    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    /* Timing */
+    --transition-smooth: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    /* Glass properties */
-    --glass-bg: hsl(0 0% 100% / 0.03);
-    --glass-border: hsl(0 0% 100% / 0.1);
-    --glass-blur: 20px;
+    /* Glass - More Subtle */
+    --glass-bg: hsl(0 0% 100% / 0.02);
+    --glass-border: hsl(0 0% 100% / 0.06);
+    --glass-blur: 24px;
   }
 }
 
@@ -68,73 +91,110 @@ All colors MUST be HSL.
     @apply border-border;
   }
 
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
   body {
-    @apply bg-background text-foreground overflow-x-hidden;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    @apply bg-background text-foreground;
+    font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'liga' 1, 'calt' 1;
+    letter-spacing: -0.01em;
+  }
+
+  /* Typography Scale - Clean Hierarchy */
+  .text-hero {
+    @apply text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.05];
+  }
+
+  .text-heading {
+    @apply text-2xl md:text-3xl font-semibold tracking-tight leading-tight;
+  }
+
+  .text-body {
+    @apply text-base md:text-lg font-normal leading-relaxed;
+  }
+
+  .text-caption {
+    @apply text-sm font-normal leading-normal;
+  }
+
+  /* Spacing Scale */
+  .space-section {
+    @apply py-20 md:py-28 lg:py-32;
+  }
+
+  .space-group {
+    @apply py-8 md:py-12;
+  }
+
+  .space-element {
+    @apply py-4 md:py-6;
   }
 }
 
 @layer components {
-  /* Glass Panel Styles */
+  /* Glass Panel - Refined */
   .glass-panel {
     background: var(--glass-bg);
     backdrop-filter: blur(var(--glass-blur));
     -webkit-backdrop-filter: blur(var(--glass-blur));
     border: 1px solid var(--glass-border);
-    box-shadow: var(--shadow-card);
+    box-shadow: var(--shadow-soft);
   }
 
   .glass-input {
-    background: hsl(240 15% 6% / 0.7);
-    backdrop-filter: blur(40px);
-    -webkit-backdrop-filter: blur(40px);
-    border: 1px solid hsl(0 0% 100% / 0.12);
-    box-shadow: 0 8px 32px 0 hsl(0 0% 0% / 0.37);
+    background: hsl(240 12% 8% / 0.8);
+    backdrop-filter: blur(32px);
+    -webkit-backdrop-filter: blur(32px);
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    box-shadow: var(--shadow-soft);
   }
 
   .glass-chip {
-    background: hsl(0 0% 100% / 0.05);
-    border: 1px solid hsl(0 0% 100% / 0.1);
-    color: hsl(0 0% 98% / 0.8);
+    background: hsl(0 0% 100% / 0.04);
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    color: hsl(0 0% 90%);
   }
 
-  /* Neon Blob Animations */
+  /* Neon Blobs - Subtler */
   .neon-blob {
     position: absolute;
-    filter: blur(80px);
-    opacity: 0.6;
+    filter: blur(100px);
+    opacity: 0.35;
     border-radius: 50%;
     pointer-events: none;
   }
 
   .blob-violet {
     background: hsl(var(--neon-violet));
-    animation: float-blob 12s infinite ease-in-out;
+    animation: float-blob 20s infinite ease-in-out;
   }
 
   .blob-pink {
     background: hsl(var(--neon-pink));
-    animation: float-blob 15s infinite ease-in-out reverse;
+    animation: float-blob 24s infinite ease-in-out reverse;
   }
 
   .blob-blue {
     background: hsl(var(--neon-blue));
-    animation: float-blob 18s infinite ease-in-out;
-    animation-delay: -6s;
+    animation: float-blob 28s infinite ease-in-out;
+    animation-delay: -8s;
   }
 
   .blob-cyan {
     background: hsl(var(--neon-cyan));
-    animation: float-blob 14s infinite ease-in-out reverse;
-    animation-delay: -3s;
+    animation: float-blob 22s infinite ease-in-out reverse;
+    animation-delay: -4s;
   }
 
-  /* Card hover glow effect */
+  /* Card Glow - Subtle */
   .card-glow-violet::before {
     content: '';
     position: absolute;
-    inset: -2px;
-    background: linear-gradient(135deg, hsl(270 100% 65% / 0.3), transparent, hsl(330 90% 60% / 0.3));
+    inset: -1px;
+    background: linear-gradient(135deg, hsl(270 95% 65% / 0.2), transparent, hsl(330 85% 60% / 0.2));
     border-radius: inherit;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -148,8 +208,8 @@ All colors MUST be HSL.
   .card-glow-pink::before {
     content: '';
     position: absolute;
-    inset: -2px;
-    background: linear-gradient(135deg, hsl(330 90% 60% / 0.3), transparent, hsl(210 100% 55% / 0.3));
+    inset: -1px;
+    background: linear-gradient(135deg, hsl(330 85% 60% / 0.2), transparent, hsl(210 100% 55% / 0.2));
     border-radius: inherit;
     opacity: 0;
     transition: opacity 0.3s ease;
@@ -162,12 +222,50 @@ All colors MUST be HSL.
 }
 
 @layer utilities {
-  /* Neon text glow */
+  /* Text Effects - Refined */
   .text-glow {
-    text-shadow: 0 0 20px hsl(var(--neon-violet) / 0.5), 0 0 40px hsl(var(--neon-violet) / 0.3);
+    text-shadow: 0 0 30px hsl(var(--neon-violet) / 0.3);
   }
 
   .text-glow-pink {
-    text-shadow: 0 0 20px hsl(var(--neon-pink) / 0.5), 0 0 40px hsl(var(--neon-pink) / 0.3);
+    text-shadow: 0 0 30px hsl(var(--neon-pink) / 0.3);
+  }
+
+  /* Premium Text Gradient */
+  .text-gradient {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(240 20% 85%) 50%, hsl(270 30% 90%) 100%);
+  }
+
+  .text-gradient-accent {
+    @apply bg-clip-text text-transparent;
+    background-image: var(--gradient-primary);
+  }
+}
+
+/* Animation Keyframes */
+@keyframes float-blob {
+  0% {
+    transform: translate(0, 0) scale(1);
+  }
+  33% {
+    transform: translate(20px, -30px) scale(1.05);
+  }
+  66% {
+    transform: translate(-15px, 15px) scale(0.95);
+  }
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+}
+
+@keyframes fade-in-up {
+  0% {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
