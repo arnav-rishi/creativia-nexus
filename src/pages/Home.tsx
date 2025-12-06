@@ -110,7 +110,7 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row gap-4 items-center animate-fade-in" style={{
           animationDelay: "300ms"
         }}>
-            <Button onClick={handleGenerateClick} size="lg" className="h-14 px-10 text-base font-medium rounded-full shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 bg-primary-foreground text-popover">
+            <Button onClick={handleGenerateClick} size="lg" className="h-14 px-10 text-base font-medium rounded-full shadow-lg hover:shadow-xl transition-all duration-300 bg-foreground text-background hover:bg-foreground/90">
               Generate Now
               <ArrowRight size={18} className="ml-2" />
             </Button>
