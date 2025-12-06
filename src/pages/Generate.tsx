@@ -415,8 +415,8 @@ const Generate = () => {
       </ScrollArea>
 
       {/* Input Area */}
-      <div className="sticky bottom-0 z-20 bg-background/80 backdrop-blur-xl border-t border-border/30 px-4 py-4">
-        <div className="max-w-4xl mx-auto">
+      <div className="sticky bottom-4 z-20 px-4">
+        <div className="max-w-4xl mx-auto bg-background/40 backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl shadow-black/20">
           {/* Settings Row */}
           <div className="flex items-center gap-2 mb-3 flex-wrap">
             {/* Mode Toggle */}
