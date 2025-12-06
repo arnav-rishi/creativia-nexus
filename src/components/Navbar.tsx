@@ -71,8 +71,6 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
 
   const isActive = (path: string) => location.pathname === path;
 
-  if (!user) return null;
-
   return (
     <nav className={`bg-transparent sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
@@ -207,79 +205,101 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
-          {/* Credits badge */}
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/30">
-            <CreditCard className="h-3.5 w-3.5 text-primary" />
-            <span className="text-sm font-medium">{credits}</span>
-            <span className="text-xs text-muted-foreground">credits</span>
-          </div>
-
-          {/* Generate CTA */}
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => navigate("/generate")}
-            className="hidden sm:inline-flex rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground gap-1.5"
-          >
-            Create <ArrowUpRight className="h-3.5 w-3.5" />
-          </Button>
-
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:bg-muted/50">
-                <Avatar className="h-9 w-9">
-                  <AvatarFallback className="bg-gradient-primary text-xs font-medium text-white">
-                    {user.email?.[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 bg-popover/95 backdrop-blur-xl border-border/50 rounded-xl">
-              <DropdownMenuLabel className="pb-2">
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium truncate">{user.email}</p>
-                  <p className="text-xs text-muted-foreground">{credits} credits available</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-border/30" />
-              
-              {/* Mobile nav items */}
-              <div className="md:hidden">
-                <DropdownMenuItem onClick={() => navigate("/")} className="text-sm">
-                  <Sparkles className="mr-2 h-4 w-4" />
-                  Home
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate("/generate")} className="text-sm">
-                  <Zap className="mr-2 h-4 w-4" />
-                  Generate
-                </DropdownMenuItem>
-                <DropdownMenuSeparator className="bg-border/30" />
+          {user ? (
+            <>
+              {/* Credits badge */}
+              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/30">
+                <CreditCard className="h-3.5 w-3.5 text-primary" />
+                <span className="text-sm font-medium">{credits}</span>
+                <span className="text-xs text-muted-foreground">credits</span>
               </div>
 
-              <DropdownMenuItem onClick={() => navigate("/gallery")} className="text-sm">
-                <Image className="mr-2 h-4 w-4" />
-                Gallery
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/jobs")} className="text-sm">
-                <Clock className="mr-2 h-4 w-4" />
-                Jobs
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/pricing")} className="text-sm">
-                <CreditCard className="mr-2 h-4 w-4" />
-                Pricing
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => navigate("/profile")} className="text-sm">
-                <User className="mr-2 h-4 w-4" />
-                Profile
-              </DropdownMenuItem>
-              <DropdownMenuSeparator className="bg-border/30" />
-              <DropdownMenuItem onClick={handleSignOut} className="text-sm text-destructive focus:text-destructive">
-                <LogOut className="mr-2 h-4 w-4" />
-                Sign Out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+              {/* Generate CTA */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/generate")}
+                className="hidden sm:inline-flex rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground gap-1.5"
+              >
+                Create <ArrowUpRight className="h-3.5 w-3.5" />
+              </Button>
+
+              {/* User Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full p-0 hover:bg-muted/50">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-gradient-primary text-xs font-medium text-white">
+                        {user.email?.[0].toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 bg-popover/95 backdrop-blur-xl border-border/50 rounded-xl">
+                  <DropdownMenuLabel className="pb-2">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium truncate">{user.email}</p>
+                      <p className="text-xs text-muted-foreground">{credits} credits available</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator className="bg-border/30" />
+                  
+                  {/* Mobile nav items */}
+                  <div className="md:hidden">
+                    <DropdownMenuItem onClick={() => navigate("/")} className="text-sm">
+                      <Sparkles className="mr-2 h-4 w-4" />
+                      Home
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => navigate("/generate")} className="text-sm">
+                      <Zap className="mr-2 h-4 w-4" />
+                      Generate
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator className="bg-border/30" />
+                  </div>
+
+                  <DropdownMenuItem onClick={() => navigate("/gallery")} className="text-sm">
+                    <Image className="mr-2 h-4 w-4" />
+                    Gallery
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/jobs")} className="text-sm">
+                    <Clock className="mr-2 h-4 w-4" />
+                    Jobs
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/pricing")} className="text-sm">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Pricing
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => navigate("/profile")} className="text-sm">
+                    <User className="mr-2 h-4 w-4" />
+                    Profile
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator className="bg-border/30" />
+                  <DropdownMenuItem onClick={handleSignOut} className="text-sm text-destructive focus:text-destructive">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => navigate("/generate")}
+                className="hidden sm:inline-flex rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground gap-1.5"
+              >
+                Create <ArrowUpRight className="h-3.5 w-3.5" />
+              </Button>
+              <Button
+                size="sm"
+                onClick={() => navigate("/auth")}
+                className="rounded-full bg-primary hover:bg-primary/90 text-primary-foreground"
+              >
+                Sign In
+              </Button>
+            </>
+          )}
         </div>
       </div>
     </nav>
