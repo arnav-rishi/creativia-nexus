@@ -485,8 +485,8 @@ const Generate = () => {
 
           {/* Input */}
           <div className="gap-3 rounded-none flex-row flex items-start justify-start">
-            <Textarea ref={textareaRef} value={prompt} onChange={e => setPrompt(e.target.value)} onKeyDown={handleKeyDown} placeholder={`Describe the ${mode} you want to create...`} disabled={isGenerating} className="flex-1 min-h-[52px] max-h-32 resize-none bg-muted/50 border-border/40 rounded-3xl" />
-            <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} className="h-[52px] w-[52px] bg-primary hover:bg-primary/90 rounded-3xl">
+            <Textarea ref={textareaRef} value={prompt} onChange={e => setPrompt(e.target.value)} onKeyDown={handleKeyDown} placeholder={`Describe the ${mode} you want to create...`} disabled={isGenerating} className="flex-1 min-h-[44px] max-h-24 resize-none bg-muted/50 border-border/40 rounded-3xl py-2.5" />
+            <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} className="h-[44px] w-[44px] bg-primary hover:bg-primary/90 rounded-3xl">
               {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
             </Button>
           </div>
