@@ -35,6 +35,7 @@ import {
 } from "@/components/ui/navigation-menu";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/components/ThemeToggle";
 
 interface NavbarProps {
   credits?: number;
@@ -235,6 +236,8 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
 
         {/* Right side */}
         <div className="flex items-center gap-3">
+          {/* Theme Toggle */}
+          <ThemeToggle />
           {user ? (
             <>
               {/* Credits badge */}
