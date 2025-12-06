@@ -1,19 +1,29 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Sparkles, Image, Video, Wand2, Zap, ArrowRight } from "lucide-react";
+import { Sparkles, Type, Image, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import CommunityGallery from "@/components/CommunityGallery";
+import NeonBackground from "@/components/NeonBackground";
+import GlassCard from "@/components/GlassCard";
+import PromptWorkspace from "@/components/PromptWorkspace";
 import Navbar from "@/components/Navbar";
+
+type ViewMode = "landing" | "workspace";
+type GenerationMode = "text" | "image" | null;
 
 const Home = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [credits, setCredits] = useState(0);
+  const [view, setView] = useState<ViewMode>("landing");
+  const [selectedMode, setSelectedMode] = useState<GenerationMode>(null);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [animatingCard, setAnimatingCard] = useState<GenerationMode>(null);
 
   useEffect(() => {
     checkAuth();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
       if (session?.user) {
         fetchCredits(session.user.id);
@@ -24,7 +34,9 @@ const Home = () => {
   }, []);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     setIsAuthenticated(!!session);
     if (session?.user) {
       fetchCredits(session.user.id);
@@ -40,148 +52,151 @@ const Home = () => {
     if (data) setCredits(data.balance);
   };
 
+  const handleCardSelection = (mode: GenerationMode) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setAnimatingCard(mode);
+    setSelectedMode(mode);
+
+    setTimeout(() => {
+      setView("workspace");
+      setIsAnimating(false);
+      setAnimatingCard(null);
+    }, 500);
+  };
+
+  const handleBack = () => {
+    setView("landing");
+    setSelectedMode(null);
+  };
+
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar credits={isAuthenticated ? credits : undefined} />
+    <div className="min-h-screen bg-background relative">
+      <NeonBackground />
       
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-radial from-primary/20 via-background to-background" />
-        
-        <div className="container relative mx-auto px-4 py-24 md:py-32">
-          <div className="mx-auto max-w-4xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-gradient-secondary/20 px-4 py-2 text-sm border border-border/50">
-              <Sparkles className="h-4 w-4 text-secondary" />
-              <span className="text-muted-foreground">Powered by Advanced AI Models</span>
+      {/* Only show navbar on landing view */}
+      {view === "landing" && (
+        <Navbar credits={isAuthenticated ? credits : undefined} />
+      )}
+
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen">
+        {/* Landing View */}
+        {view === "landing" && (
+          <div
+            className={`flex flex-col items-center w-full max-w-6xl px-4 transition-all duration-500 ${
+              isAnimating ? "opacity-0 scale-95" : "opacity-100 scale-100"
+            }`}
+          >
+            {/* Hero Header */}
+            <div className="text-center mb-12 animate-fade-in-up">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-panel mb-6">
+                <Sparkles size={16} className="text-primary" />
+                <span className="text-sm font-medium text-muted-foreground">
+                  Next-Gen AI Creation
+                </span>
+              </div>
+              <h1 className="text-5xl md:text-7xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-200 via-pink-200 to-blue-200 leading-tight drop-shadow-lg mb-4">
+                Create Impossible
+                <br />
+                Things
+              </h1>
+              <p className="text-muted-foreground text-lg max-w-xl mx-auto">
+                Transform your ideas into stunning images and videos with cutting-edge AI
+              </p>
             </div>
 
-            <h1 className="mb-6 text-5xl md:text-7xl font-bold bg-gradient-primary bg-clip-text text-transparent leading-tight">
-              Create Stunning AI Content in Seconds
-            </h1>
+            {/* Selection Cards */}
+            <div className="flex flex-col md:flex-row gap-6 w-full justify-center max-w-4xl">
+              {/* Text Card */}
+              <GlassCard
+                onClick={() => handleCardSelection("text")}
+                glowColor="violet"
+                isAnimating={animatingCard === "text"}
+                className={`flex-1 h-80 md:max-w-md ${
+                  animatingCard === "image" ? "opacity-0 scale-90" : ""
+                }`}
+              >
+                <div className="p-4 rounded-2xl bg-foreground/5 border border-border group-hover:border-primary/50 transition-colors">
+                  <Type size={32} className="text-primary" />
+                </div>
 
-            <p className="mb-8 text-xl text-muted-foreground max-w-2xl mx-auto">
-              Transform your ideas into beautiful images and videos using the latest AI technology. 
-              From OpenAI's DALL-E to Google's Veo, all in one place.
-            </p>
+                <div className="relative z-10 mt-auto">
+                  <h3 className="text-2xl font-bold mb-2 text-foreground">
+                    Start with Text
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    Transform words into stunning Images or Videos. Perfect for detailed prompts and creative scripts.
+                  </p>
+                </div>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/generate">
-                <Button size="lg" className="gap-2 shadow-glow">
-                  <Sparkles className="h-5 w-5" />
-                  Start Creating
-                </Button>
+                <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                  <ArrowRight className="text-foreground" />
+                </div>
+              </GlassCard>
+
+              {/* Image Card */}
+              <GlassCard
+                onClick={() => handleCardSelection("image")}
+                glowColor="pink"
+                isAnimating={animatingCard === "image"}
+                className={`flex-1 h-80 md:max-w-md ${
+                  animatingCard === "text" ? "opacity-0 scale-90" : ""
+                }`}
+              >
+                <div className="p-4 rounded-2xl bg-foreground/5 border border-border group-hover:border-accent/50 transition-colors">
+                  <Image size={32} className="text-accent" />
+                </div>
+
+                <div className="relative z-10 mt-auto">
+                  <h3 className="text-2xl font-bold mb-2 text-foreground">
+                    Start with Image
+                  </h3>
+                  <p className="text-muted-foreground text-sm">
+                    Upload to animate, edit, or transform existing visuals using AI-powered generation.
+                  </p>
+                </div>
+
+                <div className="absolute bottom-8 right-8 opacity-0 group-hover:opacity-100 transform translate-x-4 group-hover:translate-x-0 transition-all duration-300">
+                  <ArrowRight className="text-foreground" />
+                </div>
+              </GlassCard>
+            </div>
+
+            {/* Quick Links */}
+            <div className="flex gap-4 mt-12 flex-wrap justify-center">
+              <Link
+                to="/generate"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+              >
+                Go to Studio
               </Link>
-              <Link to="/pricing">
-                <Button size="lg" variant="outline" className="gap-2">
-                  View Pricing
-                </Button>
+              <span className="text-border">•</span>
+              <Link
+                to="/pricing"
+                className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+              >
+                View Pricing
               </Link>
+              {isAuthenticated && (
+                <>
+                  <span className="text-border">•</span>
+                  <Link
+                    to="/gallery"
+                    className="text-sm text-muted-foreground hover:text-foreground transition-colors underline-offset-4 hover:underline"
+                  >
+                    My Gallery
+                  </Link>
+                </>
+              )}
             </div>
           </div>
-        </div>
-      </section>
+        )}
 
-      {/* Features Section */}
-      <section className="py-24 bg-card/30">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Four Powerful Generation Modes
-            </h2>
-            <p className="text-muted-foreground text-lg">
-              Choose the perfect tool for your creative vision
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            <div className="p-6 rounded-lg bg-card border border-border/50 hover:border-primary/50 transition-colors">
-              <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
-                <Image className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Text to Image</h3>
-              <p className="text-muted-foreground text-sm">
-                Generate stunning images from text descriptions using DALL-E 3 or Stability AI
-              </p>
-            </div>
-
-            <div className="p-6 rounded-lg bg-card border border-border/50 hover:border-primary/50 transition-colors">
-              <div className="h-12 w-12 rounded-lg bg-gradient-secondary flex items-center justify-center mb-4">
-                <Wand2 className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Image to Image</h3>
-              <p className="text-muted-foreground text-sm">
-                Transform and stylize existing images with AI-powered editing
-              </p>
-            </div>
-
-            <div className="p-6 rounded-lg bg-card border border-border/50 hover:border-primary/50 transition-colors">
-              <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
-                <Video className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Text to Video</h3>
-              <p className="text-muted-foreground text-sm">
-                Create dynamic videos from text prompts using Sora 2 or Veo 3
-              </p>
-            </div>
-
-            <div className="p-6 rounded-lg bg-card border border-border/50 hover:border-primary/50 transition-colors">
-              <div className="h-12 w-12 rounded-lg bg-gradient-secondary flex items-center justify-center mb-4">
-                <Zap className="h-6 w-6" />
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Image to Video</h3>
-              <p className="text-muted-foreground text-sm">
-                Bring static images to life with AI-powered animation
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Community Gallery Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-8">
-            <div>
-              <h2 className="text-3xl md:text-4xl font-bold mb-2">
-                Community Creations
-              </h2>
-              <p className="text-muted-foreground">
-                Explore amazing AI-generated content from our community
-              </p>
-            </div>
-            {isAuthenticated && (
-              <Link to="/gallery">
-                <Button variant="outline" className="gap-2">
-                  My Gallery
-                  <ArrowRight className="h-4 w-4" />
-                </Button>
-              </Link>
-            )}
-          </div>
-          
-          <CommunityGallery isAuthenticated={isAuthenticated} />
-        </div>
-      </section>
-
-      {/* CTA Section */}
-      <section className="py-24">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-2xl p-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Ready to Create?
-            </h2>
-            <p className="text-muted-foreground text-lg mb-8">
-              Start generating amazing AI content today with our credit-based system
-            </p>
-            <Link to="/auth">
-              <Button size="lg" className="gap-2 shadow-glow">
-                <Sparkles className="h-5 w-5" />
-                Get Started Free
-              </Button>
-            </Link>
-          </div>
-        </div>
-      </section>
+        {/* Workspace View */}
+        {view === "workspace" && selectedMode && (
+          <PromptWorkspace mode={selectedMode} onBack={handleBack} />
+        )}
+      </div>
     </div>
   );
 };
