@@ -515,7 +515,7 @@ const Generate = () => {
           {conversations.map(conv => (
             <div
               key={conv.id}
-              className={`group flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors ${
+              className={`group flex items-center gap-2 p-3 rounded-lg cursor-pointer transition-colors min-w-0 ${
                 currentConversationId === conv.id
                   ? "bg-primary/10 text-primary"
                   : "hover:bg-muted/50"
@@ -523,11 +523,13 @@ const Generate = () => {
               onClick={() => loadConversation(conv.id)}
             >
               <MessageSquare className="h-4 w-4 flex-shrink-0" />
-              <span className="flex-1 truncate text-sm">{conv.title}</span>
+              <span className="flex-1 text-sm truncate min-w-0 overflow-hidden text-ellipsis whitespace-nowrap">
+                {conv.title}
+              </span>
               <Button
                 variant="ghost"
                 size="sm"
-                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
                 onClick={(e) => {
                   e.stopPropagation();
                   deleteConversation(conv.id);
