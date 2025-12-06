@@ -178,7 +178,7 @@ const Home = () => {
       </section>
 
       {/* Community Gallery Section */}
-      <section className="relative z-10 py-24 px-6 bg-card/20">
+      <section id="community" className="relative z-10 py-24 px-6 bg-card/20 scroll-mt-20">
         <div className="max-w-7xl mx-auto">
           {/* Section Header */}
           <div className="text-center mb-12">
