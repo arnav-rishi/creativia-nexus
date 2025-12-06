@@ -420,7 +420,7 @@ const Generate = () => {
           {/* Settings Row */}
           <div className="flex items-center gap-2 mb-3 flex-wrap rounded-lg">
             {/* Mode Toggle */}
-            <div className="flex bg-muted/50 border border-border/40 p-1 rounded-sm">
+            <div className="flex bg-muted/50 border-border/40 p-1 rounded-sm border-0">
               <button onClick={() => setMode("image")} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${mode === "image" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 <ImageIcon className="h-3 w-3 inline mr-1" />
                 Image
