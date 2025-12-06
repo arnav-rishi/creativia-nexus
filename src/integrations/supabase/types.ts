@@ -368,6 +368,8 @@ export type Database = {
         Args: { p_amount: number; p_user_id: string }
         Returns: boolean
       }
+      get_like_count: { Args: { p_generation_id: string }; Returns: number }
+      has_user_liked: { Args: { p_generation_id: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never

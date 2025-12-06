@@ -73,20 +73,15 @@ const CommunityGallery = ({ isAuthenticated, currentUserId }: CommunityGalleryPr
           setCreatorNames(names);
         }
 
-        // Fetch like counts for all generations
-        const generationIds = data.map(g => g.id);
-        const { data: likes } = await supabase
-          .from("likes")
-          .select("generation_id")
-          .in("generation_id", generationIds);
-        
-        if (likes) {
-          const counts: Record<string, number> = {};
-          likes.forEach(like => {
-            counts[like.generation_id] = (counts[like.generation_id] || 0) + 1;
-          });
-          setLikeCounts(counts);
+        // Fetch like counts using secure RPC function
+        const counts: Record<string, number> = {};
+        for (const gen of data) {
+          const { data: count } = await supabase.rpc('get_like_count', { p_generation_id: gen.id });
+          if (count !== null) {
+            counts[gen.id] = count;
+          }
         }
+        setLikeCounts(counts);
       }
     } catch (err) {
       console.error("Error:", err);
@@ -98,16 +93,15 @@ const CommunityGallery = ({ isAuthenticated, currentUserId }: CommunityGalleryPr
   const fetchUserLikes = async () => {
     if (!currentUserId) return;
     
-    const generationIds = generations.map(g => g.id);
-    const { data } = await supabase
-      .from("likes")
-      .select("generation_id")
-      .eq("user_id", currentUserId)
-      .in("generation_id", generationIds);
-    
-    if (data) {
-      setUserLikes(new Set(data.map(l => l.generation_id)));
+    // Use secure RPC function to check which generations user has liked
+    const likedSet = new Set<string>();
+    for (const gen of generations) {
+      const { data: hasLiked } = await supabase.rpc('has_user_liked', { p_generation_id: gen.id });
+      if (hasLiked) {
+        likedSet.add(gen.id);
+      }
     }
+    setUserLikes(likedSet);
   };
 
   const handleLike = async (generationId: string) => {
