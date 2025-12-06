@@ -14,6 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
+      conversation_messages: {
+        Row: {
+          aspect_ratio: string | null
+          content: string
+          conversation_id: string
+          created_at: string | null
+          error_message: string | null
+          generation_id: string | null
+          id: string
+          message_type: string | null
+          role: string
+          status: string | null
+        }
+        Insert: {
+          aspect_ratio?: string | null
+          content: string
+          conversation_id: string
+          created_at?: string | null
+          error_message?: string | null
+          generation_id?: string | null
+          id?: string
+          message_type?: string | null
+          role: string
+          status?: string | null
+        }
+        Update: {
+          aspect_ratio?: string | null
+          content?: string
+          conversation_id?: string
+          created_at?: string | null
+          error_message?: string | null
+          generation_id?: string | null
+          id?: string
+          message_type?: string | null
+          role?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_messages_generation_id_fkey"
+            columns: ["generation_id"]
+            isOneToOne: false
+            referencedRelation: "generations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          created_at: string | null
+          id: string
+          title: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          title?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       credit_transactions: {
         Row: {
           amount: number
