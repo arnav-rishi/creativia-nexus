@@ -55,7 +55,7 @@ const IMAGE_COST = 5;
 
 interface GenerationResult {
   jobId: string;
-  status: "pending" | "processing" | "succeeded" | "failed";
+  status: "pending" | "processing" | "succeeded" | "completed" | "failed";
   resultUrl?: string;
   type: "image" | "video";
   prompt: string;
@@ -119,7 +119,7 @@ const Generate = () => {
         });
       }, 1000);
       return () => clearInterval(interval);
-    } else if (currentGeneration?.status === "succeeded") {
+    } else if (currentGeneration?.status === "succeeded" || currentGeneration?.status === "completed") {
       setProgress(100);
     }
   }, [currentGeneration?.status]);
@@ -168,12 +168,12 @@ const Generate = () => {
         errorMessage: job.error_message || undefined,
       });
 
-      if (job.status === "succeeded" || job.status === "failed") {
+      if (job.status === "succeeded" || job.status === "completed" || job.status === "failed") {
         if (pollingRef.current) clearInterval(pollingRef.current);
         setIsGenerating(false);
         fetchCredits(user.id);
         
-        if (job.status === "succeeded") {
+        if (job.status === "succeeded" || job.status === "completed") {
           toast.success("Generation complete!");
         } else {
           toast.error(job.error_message || "Generation failed");
@@ -439,7 +439,7 @@ const Generate = () => {
               )}
 
               {/* Success State */}
-              {currentGeneration.status === "succeeded" && (
+              {(currentGeneration.status === "succeeded" || currentGeneration.status === "completed") && (
                 <div className="space-y-4">
                   <div className="aspect-video bg-background/30 rounded-2xl overflow-hidden flex items-center justify-center">
                     {currentGeneration.resultUrl ? (
