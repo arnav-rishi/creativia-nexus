@@ -318,7 +318,7 @@ const Generate = () => {
       <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
 
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/30 px-6 py-3">
+      <header className="sticky top-0 z-20 bg-transparent px-6 py-3">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-4">
             <button onClick={() => navigate("/")} className="text-foreground/70 hover:text-foreground flex items-center gap-2 transition-colors">
