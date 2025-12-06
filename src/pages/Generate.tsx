@@ -418,9 +418,9 @@ const Generate = () => {
       <div className="sticky bottom-4 z-20 px-4">
         <div className="max-w-4xl mx-auto backdrop-blur-2xl border border-white/10 rounded-2xl p-4 shadow-2xl shadow-black/20 bg-inherit">
           {/* Settings Row */}
-          <div className="flex items-center gap-2 mb-3 flex-wrap">
+          <div className="flex items-center gap-2 mb-3 flex-wrap rounded-lg">
             {/* Mode Toggle */}
-            <div className="flex rounded-full bg-muted/50 border border-border/40 p-1">
+            <div className="flex bg-muted/50 border border-border/40 p-1 rounded-sm">
               <button onClick={() => setMode("image")} className={`px-3 py-1 rounded-full text-xs font-medium transition-colors ${mode === "image" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}>
                 <ImageIcon className="h-3 w-3 inline mr-1" />
                 Image
@@ -484,7 +484,7 @@ const Generate = () => {
           </div>
 
           {/* Input */}
-          <div className="flex gap-3 rounded-none">
+          <div className="gap-3 rounded-none flex-row flex items-start justify-start">
             <Textarea ref={textareaRef} value={prompt} onChange={e => setPrompt(e.target.value)} onKeyDown={handleKeyDown} placeholder={`Describe the ${mode} you want to create...`} disabled={isGenerating} className="flex-1 min-h-[52px] max-h-32 resize-none bg-muted/50 border-border/40 rounded-3xl" />
             <Button onClick={handleGenerate} disabled={isGenerating || !prompt.trim()} className="h-[52px] w-[52px] bg-primary hover:bg-primary/90 rounded-3xl">
               {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
