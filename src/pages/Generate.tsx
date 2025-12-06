@@ -376,11 +376,11 @@ const Generate = () => {
                       </div>}
 
                     {/* Success state */}
-                    {message.status === "completed" && message.imageUrl && <div className="space-y-3">
-                        <div className="aspect-video bg-background/50 flex items-center justify-center">
-                          {message.type === "video" ? <video src={message.imageUrl} controls autoPlay loop className="max-h-full max-w-full object-contain" /> : <img src={message.imageUrl} alt="Generated content" className="max-h-full max-w-full object-contain" />}
+                    {message.status === "completed" && message.imageUrl && <div className="space-y-3 animate-fade-in">
+                        <div className="aspect-video bg-background/50 flex items-center justify-center overflow-hidden">
+                          {message.type === "video" ? <video src={message.imageUrl} controls autoPlay loop className="max-h-full max-w-full object-contain animate-scale-in" /> : <img src={message.imageUrl} alt="Generated content" className="max-h-full max-w-full object-contain animate-scale-in" />}
                         </div>
-                        <div className="px-4 pb-4 flex gap-2 flex-wrap">
+                        <div className="px-4 pb-4 flex gap-2 flex-wrap animate-fade-in" style={{ animationDelay: '150ms' }}>
                           <Button size="sm" variant="ghost" onClick={() => handleDownload(message.imageUrl!, message.type as "image" | "video")} className="text-xs">
                             <Download className="h-3.5 w-3.5 mr-1.5" />
                             Download
