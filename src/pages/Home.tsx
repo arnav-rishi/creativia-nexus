@@ -1,8 +1,7 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Sparkles, ArrowRight } from "lucide-react";
+import { Sparkles, Image, Video, Wand2, Zap, ArrowRight } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import CommunityGallery from "@/components/CommunityGallery";
 import Navbar from "@/components/Navbar";
@@ -10,8 +9,6 @@ import Navbar from "@/components/Navbar";
 const Home = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [credits, setCredits] = useState(0);
-  const [prompt, setPrompt] = useState("");
-  const navigate = useNavigate();
 
   useEffect(() => {
     checkAuth();
@@ -43,57 +40,118 @@ const Home = () => {
     if (data) setCredits(data.balance);
   };
 
-  const handleGenerate = () => {
-    if (!isAuthenticated) {
-      navigate("/auth");
-      return;
-    }
-    navigate("/generate", { state: { prompt } });
-  };
-
   return (
     <div className="min-h-screen bg-background">
       <Navbar credits={isAuthenticated ? credits : undefined} />
       
-      {/* Hero Section with Prompt Input */}
-      <section className="relative py-12 md:py-16">
-        <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-2xl text-center mb-8">
-            <h1 className="mb-4 text-4xl md:text-5xl font-bold bg-gradient-primary bg-clip-text text-transparent leading-tight">
-              Create AI Art & Videos
+      {/* Hero Section */}
+      <section className="relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-radial from-primary/20 via-background to-background" />
+        
+        <div className="container relative mx-auto px-4 py-24 md:py-32">
+          <div className="mx-auto max-w-4xl text-center">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-gradient-secondary/20 px-4 py-2 text-sm border border-border/50">
+              <Sparkles className="h-4 w-4 text-secondary" />
+              <span className="text-muted-foreground">Powered by Advanced AI Models</span>
+            </div>
+
+            <h1 className="mb-6 text-5xl md:text-7xl font-bold bg-gradient-primary bg-clip-text text-transparent leading-tight">
+              Create Stunning AI Content in Seconds
             </h1>
-            <p className="text-muted-foreground mb-6">
-              Transform your ideas into stunning visuals. Join our creative community.
+
+            <p className="mb-8 text-xl text-muted-foreground max-w-2xl mx-auto">
+              Transform your ideas into beautiful images and videos using the latest AI technology. 
+              From OpenAI's DALL-E to Google's Veo, all in one place.
             </p>
-            
-            {/* Prompt Input */}
-            <div className="relative max-w-xl mx-auto">
-              <Input
-                placeholder="Describe the image..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && handleGenerate()}
-                className="pr-28 h-12 text-base bg-card/50 border-border/50 focus:border-primary/50"
-              />
-              <Button 
-                onClick={handleGenerate}
-                className="absolute right-1.5 top-1/2 -translate-y-1/2 gap-2 shadow-glow"
-              >
-                Generate
-              </Button>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link to="/generate">
+                <Button size="lg" className="gap-2 shadow-glow">
+                  <Sparkles className="h-5 w-5" />
+                  Start Creating
+                </Button>
+              </Link>
+              <Link to="/pricing">
+                <Button size="lg" variant="outline" className="gap-2">
+                  View Pricing
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section className="py-24 bg-card/30">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Four Powerful Generation Modes
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Choose the perfect tool for your creative vision
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <div className="p-6 rounded-lg bg-card border border-border/50 hover:border-primary/50 transition-colors">
+              <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
+                <Image className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Text to Image</h3>
+              <p className="text-muted-foreground text-sm">
+                Generate stunning images from text descriptions using DALL-E 3 or Stability AI
+              </p>
+            </div>
+
+            <div className="p-6 rounded-lg bg-card border border-border/50 hover:border-primary/50 transition-colors">
+              <div className="h-12 w-12 rounded-lg bg-gradient-secondary flex items-center justify-center mb-4">
+                <Wand2 className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Image to Image</h3>
+              <p className="text-muted-foreground text-sm">
+                Transform and stylize existing images with AI-powered editing
+              </p>
+            </div>
+
+            <div className="p-6 rounded-lg bg-card border border-border/50 hover:border-primary/50 transition-colors">
+              <div className="h-12 w-12 rounded-lg bg-gradient-primary flex items-center justify-center mb-4">
+                <Video className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Text to Video</h3>
+              <p className="text-muted-foreground text-sm">
+                Create dynamic videos from text prompts using Sora 2 or Veo 3
+              </p>
+            </div>
+
+            <div className="p-6 rounded-lg bg-card border border-border/50 hover:border-primary/50 transition-colors">
+              <div className="h-12 w-12 rounded-lg bg-gradient-secondary flex items-center justify-center mb-4">
+                <Zap className="h-6 w-6" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2">Image to Video</h3>
+              <p className="text-muted-foreground text-sm">
+                Bring static images to life with AI-powered animation
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Community Gallery Section */}
-      <section className="py-8 md:py-12">
+      <section className="py-24">
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold">Community Creations</h2>
+          <div className="flex items-center justify-between mb-8">
+            <div>
+              <h2 className="text-3xl md:text-4xl font-bold mb-2">
+                Community Creations
+              </h2>
+              <p className="text-muted-foreground">
+                Explore amazing AI-generated content from our community
+              </p>
+            </div>
             {isAuthenticated && (
               <Link to="/gallery">
-                <Button variant="ghost" size="sm" className="gap-2">
+                <Button variant="outline" className="gap-2">
                   My Gallery
                   <ArrowRight className="h-4 w-4" />
                 </Button>
@@ -102,6 +160,26 @@ const Home = () => {
           </div>
           
           <CommunityGallery isAuthenticated={isAuthenticated} />
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center bg-gradient-to-br from-card to-card/50 border border-border/50 rounded-2xl p-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Ready to Create?
+            </h2>
+            <p className="text-muted-foreground text-lg mb-8">
+              Start generating amazing AI content today with our credit-based system
+            </p>
+            <Link to="/auth">
+              <Button size="lg" className="gap-2 shadow-glow">
+                <Sparkles className="h-5 w-5" />
+                Get Started Free
+              </Button>
+            </Link>
+          </div>
         </div>
       </section>
     </div>
