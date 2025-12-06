@@ -56,11 +56,11 @@
 
     --radius: 0.75rem;
 
-    /* Accent Colors */
-    --neon-violet: 270 95% 55%;
-    --neon-pink: 330 85% 60%;
-    --neon-blue: 210 100% 55%;
-    --neon-cyan: 185 100% 50%;
+    /* Accent Colors - Light Mode uses cooler tones */
+    --neon-violet: 220 80% 55%;
+    --neon-pink: 210 90% 50%;
+    --neon-blue: 200 100% 45%;
+    --neon-cyan: 195 100% 40%;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(270 95% 55%), hsl(330 85% 60%));
