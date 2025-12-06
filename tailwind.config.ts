@@ -52,6 +52,7 @@ export default {
           pink: "hsl(var(--neon-pink))",
           blue: "hsl(var(--neon-blue))",
           cyan: "hsl(var(--neon-cyan))",
+          purple: "hsl(270 100% 65%)",
         },
       },
       backgroundImage: {
