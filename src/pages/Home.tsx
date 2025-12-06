@@ -77,10 +77,10 @@ const Home = () => {
             </div>
 
             {/* Main Title */}
-            <h1 className="text-hero text-gradient mb-6">
-              Create Impossible
+            <h1 className="text-hero mb-6">
+              <span className="text-gradient">Create Impossible</span>
               <br />
-              Things
+              <span className="text-gradient-pink">Things</span>
             </h1>
 
             {/* Subtitle */}

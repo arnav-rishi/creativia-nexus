@@ -105,7 +105,8 @@
 
   /* Typography Scale - Clean Hierarchy */
   .text-hero {
-    @apply text-5xl md:text-6xl lg:text-7xl font-semibold tracking-tight leading-[1.05];
+    @apply text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight leading-[1.05];
+    font-family: 'Plus Jakarta Sans', 'DM Sans', system-ui, sans-serif;
   }
 
   .text-heading {
@@ -231,10 +232,16 @@
     text-shadow: 0 0 30px hsl(var(--neon-pink) / 0.3);
   }
 
-  /* Premium Text Gradient */
+  /* Premium Text Gradient - Metallic Silver */
   .text-gradient {
     @apply bg-clip-text text-transparent;
-    background-image: linear-gradient(135deg, hsl(0 0% 100%) 0%, hsl(240 20% 85%) 50%, hsl(270 30% 90%) 100%);
+    background-image: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(260 10% 75%) 50%, hsl(280 15% 70%) 100%);
+  }
+
+  /* Pink/Purple accent gradient for "Things" */
+  .text-gradient-pink {
+    @apply bg-clip-text text-transparent;
+    background-image: linear-gradient(180deg, hsl(300 50% 80%) 0%, hsl(270 60% 70%) 50%, hsl(330 70% 65%) 100%);
   }
 
   .text-gradient-accent {
