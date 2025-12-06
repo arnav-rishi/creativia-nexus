@@ -111,7 +111,7 @@ const Home = () => {
                 </div>
 
                 <div className="relative z-10 mt-auto">
-                  <h3 className="text-2xl font-bold mb-2 text-foreground">Start with Text</h3>
+                  <h3 className="text-2xl font-bold mb-2 text-foreground">Generate with Text</h3>
                   <p className="text-muted-foreground text-sm">
                     Transform words into stunning Images or Videos. Perfect for detailed prompts and creative scripts.
                   </p>
