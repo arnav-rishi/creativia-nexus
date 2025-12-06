@@ -56,11 +56,11 @@
 
     --radius: 0.75rem;
 
-    /* Accent Colors - Light Mode uses vibrant cool tones */
-    --neon-violet: 240 80% 60%;
-    --neon-pink: 200 90% 55%;
-    --neon-blue: 220 100% 50%;
-    --neon-cyan: 180 100% 45%;
+    /* Accent Colors */
+    --neon-violet: 270 95% 55%;
+    --neon-pink: 330 85% 60%;
+    --neon-blue: 210 100% 55%;
+    --neon-cyan: 185 100% 50%;
 
     /* Gradients */
     --gradient-primary: linear-gradient(135deg, hsl(270 95% 55%), hsl(330 85% 60%));
@@ -214,18 +214,13 @@
     color: hsl(0 0% 90%);
   }
 
-  /* Neon Blobs - More visible */
+  /* Neon Blobs - Subtler */
   .neon-blob {
     position: absolute;
-    filter: blur(80px);
-    opacity: 0.5;
+    filter: blur(100px);
+    opacity: 0.35;
     border-radius: 50%;
     pointer-events: none;
-  }
-
-  .dark .neon-blob {
-    opacity: 0.35;
-    filter: blur(100px);
   }
 
   .blob-violet {

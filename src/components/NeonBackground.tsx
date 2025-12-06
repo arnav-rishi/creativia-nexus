@@ -4,22 +4,18 @@ const NeonBackground = () => {
       {/* Gradient overlay for depth */}
       <div className="absolute inset-0 bg-gradient-to-b from-transparent via-background/50 to-background" />
       
-      {/* Neon blobs - more visible */}
+      {/* Subtle neon blobs - reduced opacity and smoother */}
       <div
-        className="neon-blob blob-violet w-[700px] h-[700px]"
+        className="neon-blob blob-violet w-[600px] h-[600px]"
         style={{ top: "-200px", left: "-150px" }}
       />
       <div
-        className="neon-blob blob-pink w-[550px] h-[550px]"
+        className="neon-blob blob-pink w-[450px] h-[450px]"
         style={{ bottom: "-100px", right: "-100px" }}
       />
       <div
-        className="neon-blob blob-blue w-[450px] h-[450px]"
+        className="neon-blob blob-blue w-[350px] h-[350px]"
         style={{ top: "40%", left: "30%" }}
-      />
-      <div
-        className="neon-blob blob-cyan w-[400px] h-[400px]"
-        style={{ top: "20%", right: "10%" }}
       />
       
       {/* Subtle grain texture */}
