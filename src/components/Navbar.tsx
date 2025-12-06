@@ -86,8 +86,8 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
           </span>
         </Link>
 
-        {/* Center Navigation */}
-        <div className="hidden md:flex items-center gap-1">
+        {/* Center Navigation - Glass Pill Container */}
+        <div className="hidden md:flex items-center gap-1 px-2 py-1.5 rounded-full bg-background/40 backdrop-blur-xl border border-border/30">
           <Link
             to="/"
             className={cn(
