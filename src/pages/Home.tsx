@@ -11,6 +11,7 @@ type GenerationMode = "text" | "image" | null;
 
 const Home = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | undefined>(undefined);
   const [credits, setCredits] = useState(0);
   const [isAnimating, setIsAnimating] = useState(false);
   const [animatingCard, setAnimatingCard] = useState<GenerationMode>(null);
@@ -23,6 +24,7 @@ const Home = () => {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
       setIsAuthenticated(!!session);
+      setCurrentUserId(session?.user?.id);
       if (session?.user) {
         fetchCredits(session.user.id);
       }
@@ -36,6 +38,7 @@ const Home = () => {
       data: { session },
     } = await supabase.auth.getSession();
     setIsAuthenticated(!!session);
+    setCurrentUserId(session?.user?.id);
     if (session?.user) {
       fetchCredits(session.user.id);
     }
@@ -174,7 +177,7 @@ const Home = () => {
           </div>
 
           {/* Gallery */}
-          <CommunityGallery isAuthenticated={isAuthenticated} />
+          <CommunityGallery isAuthenticated={isAuthenticated} currentUserId={currentUserId} />
         </div>
       </section>
     </div>

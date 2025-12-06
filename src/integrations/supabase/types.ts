@@ -172,6 +172,35 @@ export type Database = {
         }
         Relationships: []
       }
+      likes: {
+        Row: {
+          created_at: string | null
+          generation_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          generation_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          generation_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "likes_generation_id_fkey"
+            columns: ["generation_id"]
+            isOneToOne: false
+            referencedRelation: "generations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
