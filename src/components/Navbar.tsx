@@ -74,7 +74,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
   if (!user) return null;
 
   return (
-    <nav className={`bg-transparent fixed top-0 left-0 right-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <nav className={`bg-transparent sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
