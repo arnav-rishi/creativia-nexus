@@ -55,7 +55,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
   if (!user) return null;
 
   return (
-    <nav className="border-b border-border/20 bg-background/60 backdrop-blur-xl sticky top-0 z-50">
+    <nav className="bg-transparent sticky top-0 z-50">
       <div className="container mx-auto px-6 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
