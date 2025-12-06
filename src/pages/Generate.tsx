@@ -353,15 +353,23 @@ const Generate = () => {
               </div>
             </div>}
 
-          {messages.map(message => <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+          {messages.map(message => <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
               {message.role === "assistant" && <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 mt-1">
                   <Bot className="h-4 w-4 text-white" />
                 </div>}
               
-              <div className="max-w-2xl flex-1">
-                {message.role === "user" ? <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 inline-block float-right">
+              {message.role === "user" ? (
+                <div className="flex items-start gap-3">
+                  <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 max-w-2xl">
                     <p className="text-sm">{message.content}</p>
-                  </div> : <div className="bg-muted/50 border border-border/40 rounded-2xl rounded-tl-sm overflow-hidden">
+                  </div>
+                  <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
+                    <User className="h-4 w-4 text-secondary-foreground" />
+                  </div>
+                </div>
+              ) : (
+                <div className="max-w-2xl">
+                  <div className="bg-muted/50 border border-border/40 rounded-2xl rounded-tl-sm overflow-hidden">
                     {/* Loading state */}
                     {(message.status === "pending" || message.status === "processing") && <div className="p-6 space-y-4">
                         <div className="aspect-video bg-background/50 rounded-xl flex items-center justify-center relative overflow-hidden">
@@ -403,12 +411,9 @@ const Generate = () => {
                           </div>
                         </div>
                       </div>}
-                  </div>}
-              </div>
-
-              {message.role === "user" && <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
-                  <User className="h-4 w-4 text-secondary-foreground" />
-                </div>}
+                  </div>
+                </div>
+              )}
             </div>)}
           <div ref={messagesEndRef} />
         </div>
