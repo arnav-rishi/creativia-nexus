@@ -64,7 +64,11 @@ interface GenerationResult {
 
 const Generate = () => {
   const [searchParams] = useSearchParams();
-  const initialMode = searchParams.get("mode");
+  const initialMode = searchParams.get("mode"); // "text" or "image"
+  
+  // Determine which mode tabs to show based on URL param
+  const isTextRoute = initialMode === "text" || !initialMode;
+  const isImageRoute = initialMode === "image";
   
   // Set initial mode based on URL param
   const getInitialMode = (): "text_to_image" | "image_to_image" | "text_to_video" | "image_to_video" => {
@@ -528,27 +532,60 @@ const Generate = () => {
             {/* Main Input Box */}
             <div className="w-full max-w-4xl animate-fade-in">
               <div className="glass-input rounded-3xl p-4 space-y-4">
-                {/* Mode Tabs */}
+                {/* Mode Tabs - filtered based on route */}
                 <div className="flex flex-wrap gap-2 justify-center pb-2 border-b border-foreground/10">
-                  {[
-                    { value: "text_to_image", label: "Text → Image", icon: Type },
-                    { value: "image_to_image", label: "Image → Image", icon: ImageIcon },
-                    { value: "text_to_video", label: "Text → Video", icon: Video },
-                    { value: "image_to_video", label: "Image → Video", icon: Video },
-                  ].map((m) => (
-                    <button
-                      key={m.value}
-                      onClick={() => setMode(m.value as typeof mode)}
-                      className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
-                        mode === m.value
-                          ? "bg-neon-purple/30 text-neon-purple border border-neon-purple/50"
-                          : "bg-foreground/5 text-foreground/60 border border-transparent hover:bg-foreground/10"
-                      }`}
-                    >
-                      <m.icon size={16} />
-                      {m.label}
-                    </button>
-                  ))}
+                  {isTextRoute && (
+                    <>
+                      <button
+                        onClick={() => setMode("text_to_image")}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                          mode === "text_to_image"
+                            ? "bg-neon-purple/30 text-neon-purple border border-neon-purple/50"
+                            : "bg-foreground/5 text-foreground/60 border border-transparent hover:bg-foreground/10"
+                        }`}
+                      >
+                        <Type size={16} />
+                        Text → Image
+                      </button>
+                      <button
+                        onClick={() => setMode("text_to_video")}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                          mode === "text_to_video"
+                            ? "bg-neon-purple/30 text-neon-purple border border-neon-purple/50"
+                            : "bg-foreground/5 text-foreground/60 border border-transparent hover:bg-foreground/10"
+                        }`}
+                      >
+                        <Video size={16} />
+                        Text → Video
+                      </button>
+                    </>
+                  )}
+                  {isImageRoute && (
+                    <>
+                      <button
+                        onClick={() => setMode("image_to_image")}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                          mode === "image_to_image"
+                            ? "bg-neon-purple/30 text-neon-purple border border-neon-purple/50"
+                            : "bg-foreground/5 text-foreground/60 border border-transparent hover:bg-foreground/10"
+                        }`}
+                      >
+                        <ImageIcon size={16} />
+                        Image → Image
+                      </button>
+                      <button
+                        onClick={() => setMode("image_to_video")}
+                        className={`px-4 py-2 rounded-xl text-sm font-medium transition-all flex items-center gap-2 ${
+                          mode === "image_to_video"
+                            ? "bg-neon-purple/30 text-neon-purple border border-neon-purple/50"
+                            : "bg-foreground/5 text-foreground/60 border border-transparent hover:bg-foreground/10"
+                        }`}
+                      >
+                        <Video size={16} />
+                        Image → Video
+                      </button>
+                    </>
+                  )}
                 </div>
 
                 {/* Image Upload Area */}
