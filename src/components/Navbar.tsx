@@ -2,7 +2,20 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Sparkles, LogOut, Image, User, CreditCard, Clock, ArrowUpRight, Zap, Video, ImageIcon, ChevronDown, Users } from "lucide-react";
+import {
+  Sparkles,
+  LogOut,
+  Image,
+  User,
+  CreditCard,
+  Clock,
+  ArrowUpRight,
+  Zap,
+  Video,
+  ImageIcon,
+  ChevronDown,
+  Users,
+} from "lucide-react";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -39,7 +52,9 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
       setUser(session?.user ?? null);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
     });
 
@@ -49,13 +64,13 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
-      
+
       if (currentScrollY > lastScrollY && currentScrollY > 80) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
       }
-      
+
       setLastScrollY(currentScrollY);
     };
 
@@ -72,16 +87,16 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
   const isActive = (path: string) => location.pathname === path;
 
   return (
-    <nav className={`bg-transparent sticky top-0 z-50 transition-transform duration-300 ${isVisible ? 'translate-y-0' : '-translate-y-full'}`}>
+    <nav
+      className={`bg-transparent sticky top-0 z-50 transition-transform duration-300 ${isVisible ? "translate-y-0" : "-translate-y-full"}`}
+    >
       <div className="w-full max-w-[1600px] mx-auto px-6 lg:px-12 xl:px-16 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-3 group">
           <div className="h-10 w-10 rounded-xl bg-gradient-primary flex items-center justify-center group-hover:scale-105 transition-transform shadow-lg shadow-primary/20">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
-          <span className="text-lg font-semibold text-foreground tracking-tight">
-            AI Studio
-          </span>
+          <span className="text-lg font-semibold text-foreground tracking-tight">Nexus AI</span>
         </Link>
 
         {/* Center Navigation - Glass Pill Container */}
@@ -92,7 +107,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
               "px-4 py-2 rounded-full text-sm font-medium transition-all",
               isActive("/")
                 ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
             )}
           >
             Home
@@ -101,10 +116,12 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
           <NavigationMenu>
             <NavigationMenuList>
               <NavigationMenuItem>
-                <NavigationMenuTrigger 
+                <NavigationMenuTrigger
                   className={cn(
                     "px-4 py-2 h-auto rounded-full text-sm font-medium bg-transparent hover:bg-muted/50 data-[state=open]:bg-foreground data-[state=open]:text-background",
-                    isActive("/generate") ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground"
+                    isActive("/generate")
+                      ? "bg-foreground text-background"
+                      : "text-muted-foreground hover:text-foreground",
                   )}
                 >
                   Studio
@@ -134,7 +151,9 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
                         >
                           <Zap className="h-4 w-4 text-primary mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Text to Image</p>
+                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                              Text to Image
+                            </p>
                             <p className="text-xs text-muted-foreground">Generate images from text</p>
                           </div>
                         </Link>
@@ -144,7 +163,9 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
                         >
                           <ImageIcon className="h-4 w-4 text-primary mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Image to Image</p>
+                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                              Image to Image
+                            </p>
                             <p className="text-xs text-muted-foreground">Transform existing images</p>
                           </div>
                         </Link>
@@ -154,7 +175,9 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
                         >
                           <Video className="h-4 w-4 text-primary mt-0.5" />
                           <div>
-                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">Video Generation</p>
+                            <p className="text-sm font-medium text-foreground group-hover:text-primary transition-colors">
+                              Video Generation
+                            </p>
                             <p className="text-xs text-muted-foreground">Create AI-powered videos</p>
                           </div>
                         </Link>
@@ -172,7 +195,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
               "px-4 py-2 rounded-full text-sm font-medium transition-all",
               isActive("/gallery")
                 ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
             )}
           >
             Gallery
@@ -184,7 +207,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
               "px-4 py-2 rounded-full text-sm font-medium transition-all",
               isActive("/jobs")
                 ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
             )}
           >
             Jobs
@@ -196,7 +219,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
               "px-4 py-2 rounded-full text-sm font-medium transition-all",
               isActive("/pricing")
                 ? "bg-foreground text-background"
-                : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted/50",
             )}
           >
             Pricing
@@ -242,7 +265,10 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 bg-popover/95 backdrop-blur-xl border-border/50 rounded-xl">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 bg-popover/95 backdrop-blur-xl border-border/50 rounded-xl"
+                >
                   <DropdownMenuLabel className="pb-2">
                     <div className="flex flex-col space-y-1">
                       <p className="text-sm font-medium truncate">{user.email}</p>
@@ -250,7 +276,7 @@ const Navbar = ({ credits = 0 }: NavbarProps) => {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator className="bg-border/30" />
-                  
+
                   {/* Mobile nav items */}
                   <div className="md:hidden">
                     <DropdownMenuItem onClick={() => navigate("/")} className="text-sm">
