@@ -126,6 +126,20 @@ export default {
             boxShadow: "0 0 40px hsl(270 95% 65% / 0.3)" 
           },
         },
+        "flicker": {
+          "0%, 100%": { 
+            opacity: "1",
+            boxShadow: "0 10px 30px -10px hsl(var(--primary) / 0.4)"
+          },
+          "50%": { 
+            opacity: "0.85",
+            boxShadow: "0 10px 40px -5px hsl(var(--primary) / 0.6)"
+          },
+          "25%, 75%": {
+            opacity: "0.95",
+            boxShadow: "0 10px 35px -8px hsl(var(--primary) / 0.5)"
+          },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -135,6 +149,7 @@ export default {
         "float-blob": "float-blob 20s infinite ease-in-out",
         "fade-in-up": "fade-in-up 0.5s ease-out",
         "glow-pulse": "glow-pulse 3s ease-in-out infinite",
+        "flicker": "flicker 2s ease-in-out infinite",
       },
     },
   },
