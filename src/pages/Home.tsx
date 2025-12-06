@@ -85,7 +85,7 @@ const Home = () => {
 
             {/* Subtitle */}
             <p className="text-body text-muted-foreground max-w-lg mx-auto">
-              Transform your ideas into stunning images and videos with cutting-edge AI
+              Transform your ideas into stunning images and videos with cutting edge AI
             </p>
           </header>
 
@@ -140,17 +140,11 @@ const Home = () => {
 
           {/* Quick Links */}
           <nav className="flex gap-6 mt-14 flex-wrap justify-center">
-            <Link
-              to="/generate"
-              className="text-caption text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link to="/generate" className="text-caption text-muted-foreground hover:text-foreground transition-colors">
               Go to Studio
             </Link>
             <span className="text-border/60">·</span>
-            <Link
-              to="/pricing"
-              className="text-caption text-muted-foreground hover:text-foreground transition-colors"
-            >
+            <Link to="/pricing" className="text-caption text-muted-foreground hover:text-foreground transition-colors">
               View Pricing
             </Link>
             {isAuthenticated && (
