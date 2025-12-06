@@ -353,13 +353,13 @@ const Generate = () => {
               </div>
             </div>}
 
-          {messages.map(message => <div key={message.id} className={`flex gap-4 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-              {message.role === "assistant" && <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0">
+          {messages.map(message => <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "flex-row-reverse" : "flex-row"}`}>
+              {message.role === "assistant" && <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 mt-1">
                   <Bot className="h-4 w-4 text-white" />
                 </div>}
               
-              <div className={`max-w-2xl ${message.role === "user" ? "order-first" : ""}`}>
-                {message.role === "user" ? <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3">
+              <div className="max-w-2xl flex-1">
+                {message.role === "user" ? <div className="bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-3 inline-block float-right">
                     <p className="text-sm">{message.content}</p>
                   </div> : <div className="bg-muted/50 border border-border/40 rounded-2xl rounded-tl-sm overflow-hidden">
                     {/* Loading state */}
@@ -406,7 +406,7 @@ const Generate = () => {
                   </div>}
               </div>
 
-              {message.role === "user" && <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0">
+              {message.role === "user" && <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 mt-1">
                   <User className="h-4 w-4 text-secondary-foreground" />
                 </div>}
             </div>)}
