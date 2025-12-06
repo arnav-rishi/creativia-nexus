@@ -8,7 +8,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 240 10% 3.9%;
+    --background: 240 10% 3%;
     --foreground: 0 0% 98%;
 
     --card: 240 10% 5%;
@@ -17,7 +17,7 @@ All colors MUST be HSL.
     --popover: 240 10% 5%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 280 100% 70%;
+    --primary: 270 100% 65%;
     --primary-foreground: 0 0% 98%;
 
     --secondary: 200 100% 50%;
@@ -26,26 +26,40 @@ All colors MUST be HSL.
     --muted: 240 5% 15%;
     --muted-foreground: 240 5% 65%;
 
-    --accent: 320 90% 65%;
+    --accent: 330 90% 60%;
     --accent-foreground: 0 0% 98%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 240 10% 15%;
+    --border: 240 10% 20%;
     --input: 240 10% 15%;
-    --ring: 280 100% 70%;
+    --ring: 270 100% 65%;
 
-    --radius: 0.75rem;
+    --radius: 1rem;
 
-    --gradient-primary: linear-gradient(135deg, hsl(280 100% 70%), hsl(320 90% 65%));
-    --gradient-secondary: linear-gradient(135deg, hsl(200 100% 50%), hsl(280 100% 70%));
-    --gradient-accent: linear-gradient(90deg, hsl(280 100% 70%), hsl(200 100% 50%), hsl(320 90% 65%));
+    /* Neon RGB Colors */
+    --neon-violet: 270 100% 65%;
+    --neon-pink: 330 90% 60%;
+    --neon-blue: 210 100% 55%;
+    --neon-cyan: 180 100% 50%;
+
+    --gradient-primary: linear-gradient(135deg, hsl(270 100% 65%), hsl(330 90% 60%));
+    --gradient-secondary: linear-gradient(135deg, hsl(210 100% 55%), hsl(270 100% 65%));
+    --gradient-accent: linear-gradient(90deg, hsl(270 100% 65%), hsl(210 100% 55%), hsl(330 90% 60%));
+    --gradient-neon: linear-gradient(135deg, hsl(270 100% 60%), hsl(210 100% 55%));
     
-    --shadow-glow: 0 0 40px hsl(280 100% 70% / 0.3);
-    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.4);
+    --shadow-glow: 0 0 40px hsl(270 100% 65% / 0.4);
+    --shadow-glow-pink: 0 0 40px hsl(330 90% 60% / 0.4);
+    --shadow-glow-blue: 0 0 40px hsl(210 100% 55% / 0.4);
+    --shadow-card: 0 8px 32px hsl(0 0% 0% / 0.5);
     
     --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+    /* Glass properties */
+    --glass-bg: hsl(0 0% 100% / 0.03);
+    --glass-border: hsl(0 0% 100% / 0.1);
+    --glass-blur: 20px;
   }
 }
 
@@ -55,6 +69,99 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground overflow-x-hidden;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+}
+
+@layer components {
+  /* Glass Panel Styles */
+  .glass-panel {
+    background: var(--glass-bg);
+    backdrop-filter: blur(var(--glass-blur));
+    -webkit-backdrop-filter: blur(var(--glass-blur));
+    border: 1px solid var(--glass-border);
+    box-shadow: var(--shadow-card);
+  }
+
+  .glass-input {
+    background: hsl(0 0% 0% / 0.3);
+    backdrop-filter: blur(40px);
+    -webkit-backdrop-filter: blur(40px);
+    border: 1px solid hsl(0 0% 100% / 0.15);
+    box-shadow: 0 8px 32px 0 hsl(0 0% 0% / 0.37);
+  }
+
+  /* Neon Blob Animations */
+  .neon-blob {
+    position: absolute;
+    filter: blur(80px);
+    opacity: 0.6;
+    border-radius: 50%;
+    pointer-events: none;
+  }
+
+  .blob-violet {
+    background: hsl(var(--neon-violet));
+    animation: float-blob 12s infinite ease-in-out;
+  }
+
+  .blob-pink {
+    background: hsl(var(--neon-pink));
+    animation: float-blob 15s infinite ease-in-out reverse;
+  }
+
+  .blob-blue {
+    background: hsl(var(--neon-blue));
+    animation: float-blob 18s infinite ease-in-out;
+    animation-delay: -6s;
+  }
+
+  .blob-cyan {
+    background: hsl(var(--neon-cyan));
+    animation: float-blob 14s infinite ease-in-out reverse;
+    animation-delay: -3s;
+  }
+
+  /* Card hover glow effect */
+  .card-glow-violet::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, hsl(270 100% 65% / 0.3), transparent, hsl(330 90% 60% / 0.3));
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .card-glow-violet:hover::before {
+    opacity: 1;
+  }
+
+  .card-glow-pink::before {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, hsl(330 90% 60% / 0.3), transparent, hsl(210 100% 55% / 0.3));
+    border-radius: inherit;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+    z-index: -1;
+  }
+
+  .card-glow-pink:hover::before {
+    opacity: 1;
+  }
+}
+
+@layer utilities {
+  /* Neon text glow */
+  .text-glow {
+    text-shadow: 0 0 20px hsl(var(--neon-violet) / 0.5), 0 0 40px hsl(var(--neon-violet) / 0.3);
+  }
+
+  .text-glow-pink {
+    text-shadow: 0 0 20px hsl(var(--neon-pink) / 0.5), 0 0 40px hsl(var(--neon-pink) / 0.3);
   }
 }
