@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { 
@@ -63,11 +63,20 @@ interface GenerationResult {
 }
 
 const Generate = () => {
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get("mode");
+  
+  // Set initial mode based on URL param
+  const getInitialMode = (): "text_to_image" | "image_to_image" | "text_to_video" | "image_to_video" => {
+    if (initialMode === "image") return "image_to_image";
+    return "text_to_image";
+  };
+
   const [user, setUser] = useState<any>(null);
   const [credits, setCredits] = useState(0);
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
-  const [mode, setMode] = useState<"text_to_image" | "image_to_image" | "text_to_video" | "image_to_video">("text_to_image");
+  const [mode, setMode] = useState<"text_to_image" | "image_to_image" | "text_to_video" | "image_to_video">(getInitialMode());
   const [provider] = useState("replicate");
   const [model, setModel] = useState("flux-schnell");
   const [aspectRatio, setAspectRatio] = useState("16:9");
