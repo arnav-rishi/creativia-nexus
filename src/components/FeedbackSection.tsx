@@ -159,7 +159,7 @@ const FeedbackSection = () => {
           <Button
             type="submit"
             disabled={isSubmitting}
-            className="w-full h-12 text-base font-medium rounded-xl"
+            className="w-full h-12 text-base font-medium rounded-full bg-foreground text-background hover:bg-foreground/90"
           >
             {isSubmitting ? (
               "Submitting..."

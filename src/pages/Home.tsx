@@ -208,7 +208,7 @@ const Home = () => {
           <p className="text-muted-foreground mb-8">
             Start generating stunning images and videos in seconds.
           </p>
-          <Button onClick={handleGenerateClick} size="lg" className="h-14 px-10 text-base font-medium rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25">
+          <Button onClick={handleGenerateClick} size="lg" className="h-14 px-10 text-base font-medium rounded-full bg-foreground text-background hover:bg-foreground/90 shadow-lg">
             Get Started Free
             <ArrowRight size={18} className="ml-2" />
           </Button>
