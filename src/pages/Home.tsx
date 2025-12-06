@@ -8,6 +8,7 @@ import CommunityGallery from "@/components/CommunityGallery";
 import CapabilityCard from "@/components/CapabilityCard";
 import ModelCarousel from "@/components/ModelCarousel";
 import ExampleGenerations from "@/components/ExampleGenerations";
+import FeedbackSection from "@/components/FeedbackSection";
 import { Button } from "@/components/ui/button";
 const Home = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -194,6 +195,9 @@ const Home = () => {
           <CommunityGallery isAuthenticated={isAuthenticated} currentUserId={currentUserId} />
         </div>
       </section>
+
+      {/* Feedback Section */}
+      <FeedbackSection />
 
       {/* Footer CTA */}
       <section className="relative z-10 py-24 px-6">
