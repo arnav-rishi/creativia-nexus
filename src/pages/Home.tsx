@@ -93,7 +93,7 @@ const Home = () => {
           animationDelay: "100ms"
         }}>
             <span className="text-foreground">Create </span>
-            <span className="text-gradient">Impossible</span>
+            <span className="text-gradient" style={{ WebkitTextStroke: '2px black', paintOrder: 'stroke fill' }}>Impossible</span>
             <br />
             <span className="text-gradient-pink">Things</span>
           </h1>
