@@ -93,7 +93,7 @@ const Home = () => {
           animationDelay: "100ms"
         }}>
             <span className="text-foreground">Create </span>
-            <span className="text-gradient">Impossible</span>
+            <span className="text-gradient bg-destructive-foreground">Impossible</span>
             <br />
             <span className="text-gradient-pink">Things</span>
           </h1>
@@ -110,7 +110,7 @@ const Home = () => {
           <div className="flex flex-col sm:flex-row gap-4 items-center animate-fade-in" style={{
           animationDelay: "300ms"
         }}>
-            <Button onClick={handleGenerateClick} size="lg" className="h-14 px-10 text-base font-medium rounded-full bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300">
+            <Button onClick={handleGenerateClick} size="lg" className="h-14 px-10 text-base font-medium rounded-full text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all duration-300 bg-popover-foreground">
               Generate Now
               <ArrowRight size={18} className="ml-2" />
             </Button>
