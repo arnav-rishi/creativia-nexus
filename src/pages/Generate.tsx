@@ -660,7 +660,7 @@ const Generate = () => {
                               <div className="space-y-3 animate-fade-in">
                                 <div className={`${getAspectRatioClass(message.aspectRatio)} bg-background/50 flex items-center justify-center overflow-hidden`}>
                                   {message.type === "video" ? (
-                                    <video src={message.imageUrl} controls autoPlay loop className="w-full h-full object-contain animate-scale-in" />
+                                    <video src={message.imageUrl} controls autoPlay className="w-full h-full object-contain animate-scale-in" />
                                   ) : (
                                     <img src={message.imageUrl} alt="Generated content" className="w-full h-full object-contain animate-scale-in" />
                                   )}
@@ -916,7 +916,7 @@ const Generate = () => {
                         <div className="space-y-3 animate-fade-in">
                           <div className={`${getAspectRatioClass(message.aspectRatio)} bg-background/50 flex items-center justify-center overflow-hidden`}>
                             {message.type === "video" ? (
-                              <video src={message.imageUrl} controls autoPlay loop className="w-full h-full object-contain animate-scale-in" />
+                              <video src={message.imageUrl} controls autoPlay className="w-full h-full object-contain animate-scale-in" />
                             ) : (
                               <img src={message.imageUrl} alt="Generated content" className="w-full h-full object-contain animate-scale-in" />
                             )}
