@@ -2,6 +2,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import Navbar from "@/components/Navbar";
 import NeonBackground from "@/components/NeonBackground";
+import PricingSection from "@/components/ui/pricing-section";
 
 const Pricing = () => {
   return (
@@ -9,15 +10,19 @@ const Pricing = () => {
       <NeonBackground />
       <Navbar />
       
+      {/* Animated Pricing Plans Section */}
+      <PricingSection />
+      
+      {/* Detailed Credit Pricing */}
       <div className="relative z-10 container mx-auto px-6 py-section">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <header className="text-center mb-16">
-            <h1 className="text-hero text-gradient mb-4">
-              Simple Credit Pricing
-            </h1>
+            <h2 className="text-heading text-gradient mb-4">
+              Detailed Credit Pricing
+            </h2>
             <p className="text-body text-muted-foreground max-w-xl mx-auto">
-              Purchase credits and use them across all AI models. No subscriptions, no hidden fees.
+              See how credits are used across all AI models.
             </p>
           </header>
 
