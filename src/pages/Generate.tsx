@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Loader2, Image as ImageIcon, Video, Upload, Download, Share2, Send, ChevronDown, X, ArrowLeft, CreditCard, User, Bot, Plus, MessageSquare, Trash2, Menu } from "lucide-react";
+import { Loader2, Image as ImageIcon, Video, Upload, Download, Share2, Send, ChevronDown, X, ArrowLeft, CreditCard, User, Bot, Plus, MessageSquare, Trash2, Menu, PanelLeftClose, PanelLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import NeonBackground from "@/components/NeonBackground";
@@ -102,6 +102,7 @@ const Generate = () => {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarVisible, setSidebarVisible] = useState(true);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const pollingRef = useRef<Map<string, NodeJS.Timeout>>(new Map());
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -559,14 +560,18 @@ const Generate = () => {
       {/* Desktop Layout with Resizable Sidebar */}
       <div className="hidden md:flex w-full h-screen">
         <ResizablePanelGroup direction="horizontal">
-          <ResizablePanel defaultSize={25} minSize={18} maxSize={40} className="z-10">
-            <aside className="flex flex-col h-full border-r border-border/40 bg-background/80 backdrop-blur-xl">
-              <SidebarContent />
-            </aside>
-          </ResizablePanel>
-          <ResizableHandle withHandle className="bg-border/40 hover:bg-primary/50 transition-colors" />
+          {sidebarVisible && (
+            <>
+              <ResizablePanel defaultSize={25} minSize={18} maxSize={40} className="z-10">
+                <aside className="flex flex-col h-full border-r border-border/40 bg-background/80 backdrop-blur-xl">
+                  <SidebarContent />
+                </aside>
+              </ResizablePanel>
+              <ResizableHandle withHandle className="bg-border/40 hover:bg-primary/50 transition-colors" />
+            </>
+          )}
 
-          <ResizablePanel defaultSize={75}>
+          <ResizablePanel defaultSize={sidebarVisible ? 75 : 100}>
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               {/* Hidden file input */}
@@ -576,6 +581,13 @@ const Generate = () => {
               <header className="sticky top-0 z-20 bg-transparent px-4 md:px-6 py-3">
                 <div className="flex justify-between items-center">
                   <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setSidebarVisible(!sidebarVisible)}
+                      className="text-foreground/70 hover:text-foreground transition-colors"
+                      title={sidebarVisible ? "Hide sidebar" : "Show sidebar"}
+                    >
+                      {sidebarVisible ? <PanelLeftClose size={20} /> : <PanelLeft size={20} />}
+                    </button>
                     <button
                       onClick={() => navigate("/")}
                       className="text-foreground/70 hover:text-foreground flex items-center gap-2 transition-colors"
