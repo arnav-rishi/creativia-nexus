@@ -149,6 +149,9 @@
   html {
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+    /* Ensure proper viewport recalculation on rotation */
+    height: 100%;
+    overflow-x: hidden;
   }
 
   body {
@@ -156,6 +159,17 @@
     font-family: 'DM Sans', 'Inter', system-ui, -apple-system, sans-serif;
     font-feature-settings: 'liga' 1, 'calt' 1;
     letter-spacing: -0.01em;
+    /* Use dynamic viewport height for proper rotation handling */
+    min-height: 100dvh;
+    min-height: -webkit-fill-available;
+  }
+
+  /* Force layout recalculation on orientation change */
+  @media screen and (orientation: portrait) {
+    html, body { height: 100%; }
+  }
+  @media screen and (orientation: landscape) {
+    html, body { height: 100%; }
   }
 
   /* Typography Scale - Clean Hierarchy */

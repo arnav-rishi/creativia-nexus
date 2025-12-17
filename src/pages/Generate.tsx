@@ -116,6 +116,25 @@ const Generate = () => {
     };
   }, []);
 
+  // Force layout recalculation on orientation change
+  useEffect(() => {
+    const handleOrientationChange = () => {
+      // Force a repaint by temporarily modifying the DOM
+      document.body.style.overflow = 'hidden';
+      requestAnimationFrame(() => {
+        document.body.style.overflow = '';
+      });
+    };
+
+    window.addEventListener('orientationchange', handleOrientationChange);
+    window.addEventListener('resize', handleOrientationChange);
+
+    return () => {
+      window.removeEventListener('orientationchange', handleOrientationChange);
+      window.removeEventListener('resize', handleOrientationChange);
+    };
+  }, []);
+
   useEffect(() => {
     if (mode === "image") {
       setModel("flux-schnell");
@@ -670,11 +689,11 @@ const Generate = () => {
   if (!user) return null;
 
   return (
-    <div className="relative min-h-screen flex overflow-hidden bg-background">
+    <div className="relative min-h-dvh min-h-[100dvh] flex flex-col bg-background" style={{ minHeight: '-webkit-fill-available' }}>
       <NeonBackground />
 
       {/* Desktop Layout with Resizable Sidebar */}
-      <div className="hidden md:flex w-full h-screen">
+      <div className="hidden md:flex w-full h-dvh" style={{ height: '100dvh' }}>
         <ResizablePanelGroup direction="horizontal">
           {sidebarVisible && (
             <>
@@ -946,7 +965,7 @@ const Generate = () => {
       </div>
 
       {/* Mobile Layout */}
-      <div className="flex md:hidden flex-1 flex-col min-h-screen">
+      <div className="flex md:hidden flex-1 flex-col min-h-dvh" style={{ minHeight: '100dvh' }}>
         {/* Hidden file input */}
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
 
