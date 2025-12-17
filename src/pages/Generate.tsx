@@ -164,24 +164,92 @@ const Generate = () => {
 
     const { data: messagesData } = await supabase
       .from("conversation_messages")
-      .select("*, generations(result_url)")
+      .select("*, generations(result_url, id)")
       .eq("conversation_id", conversationId)
       .order("created_at", { ascending: true });
 
     if (messagesData) {
-      const loadedMessages: ChatMessage[] = messagesData.map(msg => ({
-        id: msg.id,
-        role: msg.role as "user" | "assistant",
-        content: msg.content,
-        type: msg.message_type as ChatMessage["type"],
-        imageUrl: msg.generations?.result_url || undefined,
-        status: msg.status as ChatMessage["status"],
-        errorMessage: msg.error_message || undefined,
-        aspectRatio: msg.aspect_ratio || undefined,
-        generationId: msg.generation_id || undefined,
-        timestamp: new Date(msg.created_at)
-      }));
+      const loadedMessages: ChatMessage[] = [];
+      const messagesToReconcile: { messageId: string; generationId?: string }[] = [];
+
+      for (const msg of messagesData) {
+        const chatMessage: ChatMessage = {
+          id: msg.id,
+          role: msg.role as "user" | "assistant",
+          content: msg.content,
+          type: msg.message_type as ChatMessage["type"],
+          imageUrl: msg.generations?.result_url || undefined,
+          status: msg.status as ChatMessage["status"],
+          errorMessage: msg.error_message || undefined,
+          aspectRatio: msg.aspect_ratio || undefined,
+          generationId: msg.generation_id || undefined,
+          timestamp: new Date(msg.created_at)
+        };
+
+        // If message has completed generation but status is stale, fix it
+        if ((msg.status === "pending" || msg.status === "processing") && msg.generations?.result_url) {
+          chatMessage.status = "completed";
+          chatMessage.imageUrl = msg.generations.result_url;
+          messagesToReconcile.push({ messageId: msg.id, generationId: msg.generations.id });
+        }
+        // If status is pending/processing but no generation yet, check the job table
+        else if ((msg.status === "pending" || msg.status === "processing") && msg.generation_id) {
+          // We'll check job status after setting messages
+          messagesToReconcile.push({ messageId: msg.id, generationId: msg.generation_id });
+        }
+
+        loadedMessages.push(chatMessage);
+      }
+
       setMessages(loadedMessages);
+
+      // Reconcile stale messages by checking actual job status
+      for (const { messageId, generationId } of messagesToReconcile) {
+        if (generationId) {
+          const { data: generation } = await supabase
+            .from("generations")
+            .select("result_url, job_id")
+            .eq("id", generationId)
+            .maybeSingle();
+
+          if (generation?.result_url) {
+            // Job completed - update message state and DB
+            setMessages(prev => prev.map(m => m.id === messageId ? {
+              ...m,
+              status: "completed" as const,
+              imageUrl: generation.result_url
+            } : m));
+            await updateMessageInDb(messageId, { status: "completed" }, generationId);
+          } else if (generation?.job_id) {
+            // Check job status directly
+            const { data: job } = await supabase
+              .from("jobs")
+              .select("status, result_url, error_message")
+              .eq("id", generation.job_id)
+              .maybeSingle();
+
+            if (job?.status === "completed" && job.result_url) {
+              setMessages(prev => prev.map(m => m.id === messageId ? {
+                ...m,
+                status: "completed" as const,
+                imageUrl: job.result_url
+              } : m));
+              await updateMessageInDb(messageId, { status: "completed" }, generationId);
+            } else if (job?.status === "failed") {
+              setMessages(prev => prev.map(m => m.id === messageId ? {
+                ...m,
+                status: "failed" as const,
+                errorMessage: job.error_message || "Generation failed"
+              } : m));
+              await updateMessageInDb(messageId, { status: "failed", errorMessage: job.error_message || "Generation failed" });
+            } else if (job?.status === "pending" || job?.status === "processing") {
+              // Resume polling for this job
+              pollJobStatus(generation.job_id, messageId, conversationId);
+              setIsGenerating(true);
+            }
+          }
+        }
+      }
     }
   };
 
