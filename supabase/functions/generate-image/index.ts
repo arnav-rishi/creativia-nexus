@@ -18,6 +18,15 @@ serve(async (req) => {
   let job: any;
   
   try {
+    // Validate authentication
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const replicateApiKey = Deno.env.get('REPLICATE_API_KEY');
@@ -29,6 +38,17 @@ serve(async (req) => {
     supabase = createClient(supabaseUrl, supabaseKey);
     const replicate = new Replicate({ auth: replicateApiKey });
 
+    // Verify user from token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+
+    if (authError || !user) {
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized' }),
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await req.json();
     jobId = body.jobId;
 
@@ -36,7 +56,7 @@ serve(async (req) => {
       throw new Error('Job ID is required');
     }
 
-    console.log('Processing image job:', jobId);
+    console.log('Processing image job:', jobId, 'for user:', user.id);
 
     // Fetch job details
     const { data: jobData, error: jobError } = await supabase
@@ -50,6 +70,14 @@ serve(async (req) => {
     }
     
     job = jobData;
+
+    // Verify job ownership
+    if (job.user_id !== user.id) {
+      return new Response(
+        JSON.stringify({ error: 'Forbidden - You do not have access to this job' }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
 
     // Validate prompt
     if (!job.prompt || job.prompt.length > 1000) {
