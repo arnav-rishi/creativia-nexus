@@ -23,6 +23,7 @@ export type Database = {
           error_message: string | null
           generation_id: string | null
           id: string
+          job_id: string | null
           message_type: string | null
           role: string
           status: string | null
@@ -35,6 +36,7 @@ export type Database = {
           error_message?: string | null
           generation_id?: string | null
           id?: string
+          job_id?: string | null
           message_type?: string | null
           role: string
           status?: string | null
@@ -47,6 +49,7 @@ export type Database = {
           error_message?: string | null
           generation_id?: string | null
           id?: string
+          job_id?: string | null
           message_type?: string | null
           role?: string
           status?: string | null
