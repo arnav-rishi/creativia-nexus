@@ -619,11 +619,14 @@ const Generate = () => {
     }
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleGenerate();
-    }
+  // Auto-resize textarea
+  const handleTextareaChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setPrompt(e.target.value);
+    // Reset height to auto to properly calculate scroll height
+    e.target.style.height = 'auto';
+    // Set height to scroll height, capped at max
+    const maxHeight = 200;
+    e.target.style.height = Math.min(e.target.scrollHeight, maxHeight) + 'px';
   };
 
   const getCreditCost = () => {
@@ -939,20 +942,20 @@ const Generate = () => {
                   </div>
 
                   {/* Input */}
-                  <div className="gap-3 rounded-none flex-row flex items-center justify-start">
-                    <Textarea
+                  <div className="gap-3 rounded-none flex-row flex items-end justify-start">
+                  <Textarea
                       ref={textareaRef}
                       value={prompt}
-                      onChange={e => setPrompt(e.target.value)}
-                      onKeyDown={handleKeyDown}
+                      onChange={handleTextareaChange}
                       placeholder={`Describe the ${mode} you want to create...`}
                       disabled={isGenerating}
-                      className="flex-1 h-[36px] min-h-[36px] max-h-[36px] resize-none bg-muted/50 border-border/40 rounded-3xl py-2 overflow-hidden"
+                      className="flex-1 min-h-[44px] max-h-[200px] resize-none bg-muted/50 border-border/40 rounded-2xl py-3 overflow-y-auto"
+                      rows={1}
                     />
                     <Button
                       onClick={handleGenerate}
                       disabled={isGenerating || !prompt.trim()}
-                      className="h-[36px] w-[36px] bg-primary hover:bg-primary/90 rounded-3xl"
+                      className="h-[44px] w-[44px] bg-primary hover:bg-primary/90 rounded-2xl shrink-0"
                     >
                       {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
                     </Button>
@@ -1187,20 +1190,20 @@ const Generate = () => {
               </span>
             </div>
 
-            <div className="gap-3 rounded-none flex-row flex items-center justify-start">
+            <div className="gap-3 rounded-none flex-row flex items-end justify-start">
               <Textarea
                 ref={textareaRef}
                 value={prompt}
-                onChange={e => setPrompt(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onChange={handleTextareaChange}
                 placeholder={`Describe the ${mode} you want to create...`}
                 disabled={isGenerating}
-                className="flex-1 h-[36px] min-h-[36px] max-h-[36px] resize-none bg-muted/50 border-border/40 rounded-3xl py-2 overflow-hidden"
+                className="flex-1 min-h-[44px] max-h-[200px] resize-none bg-muted/50 border-border/40 rounded-2xl py-3 overflow-y-auto"
+                rows={1}
               />
               <Button
                 onClick={handleGenerate}
                 disabled={isGenerating || !prompt.trim()}
-                className="h-[36px] w-[36px] bg-primary hover:bg-primary/90 rounded-3xl"
+                className="h-[44px] w-[44px] bg-primary hover:bg-primary/90 rounded-2xl shrink-0"
               >
                 {isGenerating ? <Loader2 className="h-5 w-5 animate-spin" /> : <Send className="h-5 w-5" />}
               </Button>
