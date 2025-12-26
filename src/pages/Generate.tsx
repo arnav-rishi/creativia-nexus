@@ -14,22 +14,38 @@ import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/componen
 const IMAGE_MODELS = [{
   value: "gen4_image",
   label: "Gen-4 Image",
-  desc: "High Quality (5 credits)"
+  desc: "High Quality"
 }, {
   value: "gen4_image_turbo",
-  label: "Gen-4 Turbo",
-  desc: "Fast (2 credits)"
+  label: "Gen-4 Image Turbo",
+  desc: "Fast"
+}, {
+  value: "gemini_2.5_flash",
+  label: "Gemini 2.5 Flash",
+  desc: "Google AI"
 }];
 
-// RunwayML Video models
+// RunwayML Video models - different models for text-to-video vs image-to-video
 const VIDEO_MODELS = [{
+  value: "veo3.1",
+  label: "Veo 3.1",
+  desc: "Text-to-Video - Best"
+}, {
+  value: "veo3.1_fast",
+  label: "Veo 3.1 Fast",
+  desc: "Text-to-Video - Fast"
+}, {
+  value: "veo3",
+  label: "Veo 3",
+  desc: "Text-to-Video"
+}, {
   value: "gen4_turbo",
   label: "Gen-4 Turbo",
-  desc: "5 credits/sec - Fast"
+  desc: "Image-to-Video"
 }, {
-  value: "gen4",
-  label: "Gen-4",
-  desc: "10 credits/sec - High Quality"
+  value: "gen3a_turbo",
+  label: "Gen-3a Turbo",
+  desc: "Image-to-Video - Fast"
 }];
 
 const ASPECT_RATIOS = [{
@@ -128,7 +144,7 @@ const Generate = () => {
     if (mode === "image") {
       setModel("gen4_image");
     } else {
-      setModel("gen4_turbo");
+      setModel("veo3.1"); // Default to veo3.1 for text-to-video
     }
   }, [mode]);
 

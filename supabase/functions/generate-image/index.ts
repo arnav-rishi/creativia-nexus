@@ -157,19 +157,22 @@ serve(async (req) => {
 
     console.log('Generating image with RunwayML...', { model, aspectRatio, jobType: job.job_type });
 
-    // Map aspect ratio to Runway format (width:height)
+    // Map aspect ratio to Runway format
+    // Accepted: "1024:1024", "1080:1080", "1168:880", "1360:768", "1440:1080", "1080:1440", 
+    //           "1808:768", "1920:1080", "1080:1920", "2112:912", "1280:720", "720:1280", 
+    //           "720:720", "960:720", "720:960", "1680:720"
     const ratioMap: Record<string, string> = {
       '1:1': '1024:1024',
       '16:9': '1920:1080',
       '9:16': '1080:1920',
-      '4:3': '1024:768',
-      '3:4': '768:1024',
+      '4:3': '1440:1080',
+      '3:4': '1080:1440',
     };
     const runwayRatio = ratioMap[aspectRatio] || '1920:1080';
 
     // Prepare request payload for RunwayML text_to_image
     const requestPayload: any = {
-      model: model, // gen4_image, gen4_image_turbo
+      model: model, // gen4_image, gen4_image_turbo, gemini_2.5_flash
       promptText: job.prompt,
       ratio: runwayRatio,
     };
@@ -178,7 +181,7 @@ serve(async (req) => {
     if (job.job_type === 'image_to_image' && job.input_image_url) {
       console.log('Using image reference mode with input:', job.input_image_url);
       requestPayload.referenceImages = [
-        { uri: job.input_image_url, tag: 'style' }
+        { uri: job.input_image_url, tag: 'reference' }
       ];
     }
 
