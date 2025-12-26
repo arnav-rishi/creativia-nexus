@@ -10,38 +10,26 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-// Image models
+// RunwayML Image models
 const IMAGE_MODELS = [{
-  value: "flux-schnell",
-  label: "Flux Schnell",
-  desc: "Fast & High Quality"
+  value: "gen4_image",
+  label: "Gen-4 Image",
+  desc: "High Quality (5 credits)"
 }, {
-  value: "flux-dev",
-  label: "Flux Dev",
-  desc: "Slower, Higher Quality"
-}, {
-  value: "flux-pro",
-  label: "Flux Pro",
-  desc: "Best Quality"
+  value: "gen4_image_turbo",
+  label: "Gen-4 Turbo",
+  desc: "Fast (2 credits)"
 }];
 
-// Video models
+// RunwayML Video models
 const VIDEO_MODELS = [{
-  value: "sora-2",
-  label: "Sora 2",
-  desc: "OpenAI - Fast"
+  value: "gen4_turbo",
+  label: "Gen-4 Turbo",
+  desc: "5 credits/sec - Fast"
 }, {
-  value: "sora-2-pro",
-  label: "Sora 2 Pro",
-  desc: "OpenAI - High Quality"
-}, {
-  value: "veo-3-fast",
-  label: "Veo 3 Fast",
-  desc: "Google - Fast"
-}, {
-  value: "pixverse-v4.5",
-  label: "Pixverse V4.5",
-  desc: "High Quality"
+  value: "gen4",
+  label: "Gen-4",
+  desc: "10 credits/sec - High Quality"
 }];
 
 const ASPECT_RATIOS = [{
@@ -55,7 +43,8 @@ const ASPECT_RATIOS = [{
   label: "9:16"
 }];
 
-const VIDEO_COST = 10;
+// RunwayML pricing: gen4_turbo video = 5 credits/sec, gen4_image = 5 credits
+const VIDEO_COST = 25; // 5 seconds * 5 credits
 const IMAGE_COST = 5;
 
 interface ChatMessage {
@@ -137,9 +126,9 @@ const Generate = () => {
 
   useEffect(() => {
     if (mode === "image") {
-      setModel("flux-schnell");
+      setModel("gen4_image");
     } else {
-      setModel("veo-3-fast");
+      setModel("gen4_turbo");
     }
   }, [mode]);
 
@@ -528,13 +517,13 @@ const Generate = () => {
         job_type: jobType,
         prompt: userMessage.content,
         input_image_url: inputImageUrl,
-        provider: "replicate",
+        provider: "runwayml",
         cost_credits: getCreditCost(),
         status: "pending",
         metadata: {
           model,
           aspect_ratio: aspectRatio,
-          duration: mode === "video" ? 8 : null
+          duration: mode === "video" ? 5 : null
         }
       }).select().single();
 
