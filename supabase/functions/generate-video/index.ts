@@ -9,6 +9,11 @@ const corsHeaders = {
 const RUNWAY_API_BASE = 'https://api.dev.runwayml.com/v1';
 const API_VERSION = '2024-11-06';
 
+// Models that support text-to-video
+const TEXT_TO_VIDEO_MODELS = ['veo3.1', 'veo3.1_fast', 'veo3'];
+// Models that support image-to-video
+const IMAGE_TO_VIDEO_MODELS = ['gen4_turbo', 'veo3.1', 'gen3a_turbo', 'veo3.1_fast', 'veo3'];
+
 // Poll task status until complete
 async function pollTaskStatus(taskId: string, apiKey: string, maxAttempts = 180): Promise<any> {
   for (let i = 0; i < maxAttempts; i++) {
@@ -152,48 +157,71 @@ serve(async (req) => {
       .eq('id', jobId);
 
     const metadata = job.metadata || {};
-    const model = metadata.model || 'gen4_turbo';
+    let model = metadata.model || 'veo3.1';
     const duration = metadata.duration || 5;
     const aspectRatio = metadata.aspect_ratio || '16:9';
+    const isImageToVideo = job.job_type === 'image_to_video' && job.input_image_url;
 
-    console.log('Generating video with RunwayML...', { model, duration, jobType: job.job_type });
+    console.log('Generating video with RunwayML...', { model, duration, jobType: job.job_type, isImageToVideo });
 
-    // Map aspect ratio to Runway format (width:height)
-    const ratioMap: Record<string, string> = {
-      '1:1': '1024:1024',
+    // Validate model for job type
+    if (isImageToVideo) {
+      if (!IMAGE_TO_VIDEO_MODELS.includes(model)) {
+        console.log(`Model ${model} not supported for image-to-video, using gen4_turbo`);
+        model = 'gen4_turbo';
+      }
+    } else {
+      if (!TEXT_TO_VIDEO_MODELS.includes(model)) {
+        console.log(`Model ${model} not supported for text-to-video, using veo3.1`);
+        model = 'veo3.1';
+      }
+    }
+
+    // Map aspect ratio to Runway format based on endpoint
+    // Image-to-video ratios: "1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672"
+    // Text-to-video ratios: "1280:720", "720:1280", "1080:1920", "1920:1080"
+    const imageToVideoRatioMap: Record<string, string> = {
+      '1:1': '960:960',
       '16:9': '1280:720',
       '9:16': '720:1280',
-      '4:3': '1024:768',
-      '3:4': '768:1024',
     };
-    const runwayRatio = ratioMap[aspectRatio] || '1280:720';
+    const textToVideoRatioMap: Record<string, string> = {
+      '1:1': '1280:720', // No 1:1 for text-to-video, default to 16:9
+      '16:9': '1280:720',
+      '9:16': '720:1280',
+    };
 
     let endpoint: string;
     let requestPayload: any;
 
-    if (job.job_type === 'image_to_video' && job.input_image_url) {
-      // Image to Video
+    if (isImageToVideo) {
+      // Image to Video endpoint
+      const runwayRatio = imageToVideoRatioMap[aspectRatio] || '1280:720';
       console.log('Using image_to_video mode with input:', job.input_image_url);
+      
       endpoint = `${RUNWAY_API_BASE}/image_to_video`;
       requestPayload = {
-        model: model, // gen4_turbo
+        model: model,
         promptImage: job.input_image_url,
         promptText: job.prompt,
         ratio: runwayRatio,
-        duration: duration, // 5 or 10 seconds
+        duration: Math.min(Math.max(duration, 2), 10), // 2-10 seconds for image-to-video
       };
     } else {
-      // Text to Video
+      // Text to Video endpoint
+      const runwayRatio = textToVideoRatioMap[aspectRatio] || '1280:720';
+      
       endpoint = `${RUNWAY_API_BASE}/text_to_video`;
       requestPayload = {
-        model: model, // gen4_turbo
+        model: model,
         promptText: job.prompt,
         ratio: runwayRatio,
-        duration: duration,
+        duration: [4, 6, 8].includes(duration) ? duration : 8, // Only 4, 6, 8 allowed for text-to-video
+        audio: true, // Include audio generation
       };
     }
 
-    console.log('RunwayML request payload:', JSON.stringify(requestPayload));
+    console.log('RunwayML request:', endpoint, JSON.stringify(requestPayload));
 
     // Create video generation task
     const createResponse = await fetch(endpoint, {
