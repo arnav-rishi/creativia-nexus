@@ -180,8 +180,30 @@ serve(async (req) => {
     // Handle image-to-image mode with reference images
     if (job.job_type === 'image_to_image' && job.input_image_url) {
       console.log('Using image reference mode with input:', job.input_image_url);
+      
+      // Generate a signed URL for the input image since user-uploads bucket is private
+      // Extract the file path from the public URL
+      let imageUri = job.input_image_url;
+      
+      if (job.input_image_url.includes('/storage/v1/object/public/user-uploads/')) {
+        const filePath = job.input_image_url.split('/storage/v1/object/public/user-uploads/')[1];
+        console.log('Generating signed URL for:', filePath);
+        
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+          .from('user-uploads')
+          .createSignedUrl(filePath, 3600); // 1 hour expiry
+        
+        if (signedUrlError) {
+          console.error('Failed to create signed URL:', signedUrlError);
+          throw new Error('Failed to access input image');
+        }
+        
+        imageUri = signedUrlData.signedUrl;
+        console.log('Using signed URL for RunwayML');
+      }
+      
       requestPayload.referenceImages = [
-        { uri: job.input_image_url, tag: 'reference' }
+        { uri: imageUri, tag: 'reference' }
       ];
     }
 

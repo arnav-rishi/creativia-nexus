@@ -199,10 +199,30 @@ serve(async (req) => {
       const runwayRatio = imageToVideoRatioMap[aspectRatio] || '1280:720';
       console.log('Using image_to_video mode with input:', job.input_image_url);
       
+      // Generate a signed URL for the input image since user-uploads bucket is private
+      let imageUri = job.input_image_url;
+      
+      if (job.input_image_url.includes('/storage/v1/object/public/user-uploads/')) {
+        const filePath = job.input_image_url.split('/storage/v1/object/public/user-uploads/')[1];
+        console.log('Generating signed URL for:', filePath);
+        
+        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
+          .from('user-uploads')
+          .createSignedUrl(filePath, 3600); // 1 hour expiry
+        
+        if (signedUrlError) {
+          console.error('Failed to create signed URL:', signedUrlError);
+          throw new Error('Failed to access input image');
+        }
+        
+        imageUri = signedUrlData.signedUrl;
+        console.log('Using signed URL for RunwayML');
+      }
+      
       endpoint = `${RUNWAY_API_BASE}/image_to_video`;
       requestPayload = {
         model: model,
-        promptImage: job.input_image_url,
+        promptImage: imageUri,
         promptText: job.prompt,
         ratio: runwayRatio,
         duration: Math.min(Math.max(duration, 2), 10), // 2-10 seconds for image-to-video
