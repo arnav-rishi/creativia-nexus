@@ -515,10 +515,10 @@ const Generate = () => {
         if (uploadError) throw uploadError;
 
         // user-uploads bucket is private: use a signed URL so external providers (e.g. Replicate)
-        // can fetch the image.
+        // can fetch the image. Use 24 hours expiry since video generation can take a long time.
         const { data: signed, error: signedErr } = await supabase.storage
           .from("user-uploads")
-          .createSignedUrl(fileName, 60 * 60);
+          .createSignedUrl(fileName, 24 * 60 * 60);
 
         if (signedErr || !signed?.signedUrl) {
           throw signedErr || new Error("Failed to create signed URL for uploaded image");
