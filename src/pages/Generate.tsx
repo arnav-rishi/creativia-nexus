@@ -513,10 +513,18 @@ const Generate = () => {
           .from("user-uploads")
           .upload(fileName, uploadedFile);
         if (uploadError) throw uploadError;
-        const { data: { publicUrl } } = supabase.storage
+
+        // user-uploads bucket is private: use a signed URL so external providers (e.g. Replicate)
+        // can fetch the image.
+        const { data: signed, error: signedErr } = await supabase.storage
           .from("user-uploads")
-          .getPublicUrl(fileName);
-        inputImageUrl = publicUrl;
+          .createSignedUrl(fileName, 60 * 60);
+
+        if (signedErr || !signed?.signedUrl) {
+          throw signedErr || new Error("Failed to create signed URL for uploaded image");
+        }
+
+        inputImageUrl = signed.signedUrl;
       }
 
       const jobType = uploadedFile
@@ -713,7 +721,14 @@ const Generate = () => {
             {/* Main Content */}
             <div className="flex-1 flex flex-col h-full overflow-hidden">
               {/* Hidden file input */}
-              <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+              <input
+                id="upload-image-input"
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                onChange={handleFileUpload}
+                className="hidden"
+              />
 
               {/* Header */}
               <header className="sticky top-0 z-20 bg-transparent px-4 md:px-6 py-3">
@@ -918,22 +933,25 @@ const Generate = () => {
 
                     {/* Upload Image */}
                     <Button
+                      asChild
                       variant="ghost"
                       size="sm"
-                      onClick={() => fileInputRef.current?.click()}
                       className={`h-8 text-xs ${uploadedFile ? "bg-primary/20 text-primary" : "bg-muted/50 border border-border/40"}`}
                     >
-                      <Upload className="h-3 w-3 mr-1" />
-                      {uploadedFile ? "Image Added" : "Add Image"}
-                      {uploadedFile && (
-                        <X
-                          className="h-3 w-3 ml-1 hover:text-destructive"
-                          onClick={e => {
-                            e.stopPropagation();
-                            setUploadedFile(null);
-                          }}
-                        />
-                      )}
+                      <label htmlFor="upload-image-input" className="cursor-pointer">
+                        <Upload className="h-3 w-3 mr-1" />
+                        {uploadedFile ? "Image Added" : "Add Image"}
+                        {uploadedFile && (
+                          <X
+                            className="h-3 w-3 ml-1 hover:text-destructive cursor-pointer"
+                            onClick={e => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setUploadedFile(null);
+                            }}
+                          />
+                        )}
+                      </label>
                     </Button>
 
                     <span className="text-xs text-muted-foreground ml-auto">
@@ -970,7 +988,14 @@ const Generate = () => {
       {/* Mobile Layout */}
       <div className="flex md:hidden flex-1 flex-col min-h-dvh" style={{ minHeight: '100dvh' }}>
         {/* Hidden file input */}
-        <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileUpload} className="hidden" />
+        <input
+          id="upload-image-input"
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileUpload}
+          className="hidden"
+        />
 
         {/* Header */}
         <header className="sticky top-0 z-20 bg-transparent px-4 py-3">
@@ -1167,22 +1192,25 @@ const Generate = () => {
               </DropdownMenu>
 
               <Button
+                asChild
                 variant="ghost"
                 size="sm"
-                onClick={() => fileInputRef.current?.click()}
                 className={`h-8 text-xs ${uploadedFile ? "bg-primary/20 text-primary" : "bg-muted/50 border border-border/40"}`}
               >
-                <Upload className="h-3 w-3 mr-1" />
-                {uploadedFile ? "Image Added" : "Add Image"}
-                {uploadedFile && (
-                  <X
-                    className="h-3 w-3 ml-1 hover:text-destructive"
-                    onClick={e => {
-                      e.stopPropagation();
-                      setUploadedFile(null);
-                    }}
-                  />
-                )}
+                <label htmlFor="upload-image-input" className="cursor-pointer">
+                  <Upload className="h-3 w-3 mr-1" />
+                  {uploadedFile ? "Image Added" : "Add Image"}
+                  {uploadedFile && (
+                    <X
+                      className="h-3 w-3 ml-1 hover:text-destructive cursor-pointer"
+                      onClick={e => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        setUploadedFile(null);
+                      }}
+                    />
+                  )}
+                </label>
               </Button>
 
               <span className="text-xs text-muted-foreground ml-auto">
