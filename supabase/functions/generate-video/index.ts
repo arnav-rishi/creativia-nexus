@@ -123,9 +123,10 @@ serve(async (req) => {
     const metadata = job.metadata || {};
     const model = metadata.model || 'stable-video-diffusion';
     const duration = metadata.duration || 8; // Default to 8 seconds
+    const aspectRatio = metadata.aspect_ratio || '16:9';
     const provider = model.startsWith('sora-') ? 'openai' : 'replicate';
 
-    console.log('Generating video...', { model, jobType: job.job_type, provider });
+    console.log('Generating video...', { model, jobType: job.job_type, provider, aspectRatio });
 
     // Handle OpenAI Sora models
     if (provider === 'openai') {
@@ -290,7 +291,7 @@ serve(async (req) => {
           prompt: job.prompt,
           duration: duration,
           resolution: '720p', // 720p or 1080p
-          aspect_ratio: '16:9',
+          aspect_ratio: aspectRatio,
           generate_audio: true,
         };
       } else if (model === 'pixverse-v4.5') {
@@ -298,7 +299,7 @@ serve(async (req) => {
           prompt: job.prompt,
           duration: getPixverseDuration(duration),
           quality: '540p', // 360p, 540p, 720p, or 1080p
-          aspect_ratio: '16:9',
+          aspect_ratio: aspectRatio,
           motion_mode: 'normal',
         };
       } else {
@@ -348,7 +349,7 @@ serve(async (req) => {
           image: job.input_image_url,
           duration: duration,
           resolution: '720p',
-          aspect_ratio: '16:9',
+          aspect_ratio: aspectRatio,
           generate_audio: true,
         };
       } else if (model === 'pixverse-v4.5') {
@@ -357,7 +358,7 @@ serve(async (req) => {
           image: job.input_image_url,
           duration: getPixverseDuration(duration),
           quality: '540p', // 360p, 540p, 720p, or 1080p
-          aspect_ratio: '16:9',
+          aspect_ratio: aspectRatio,
           motion_mode: 'normal',
         };
       } else {
