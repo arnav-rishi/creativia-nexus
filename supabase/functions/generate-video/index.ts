@@ -266,29 +266,41 @@ serve(async (req) => {
     }
 
     // Map model to Replicate model ID
+    // Note: veo-3.1-fast is the newer version with better image-to-video support
     const modelMap: Record<string, string> = {
       'stable-video-diffusion': 'stability-ai/stable-video-diffusion-img2vid-xt',
-      'veo-3-fast': 'google/veo-3-fast',
+      'veo-3-fast': 'google/veo-3.1-fast', // Using 3.1 for better image-to-video support
       'pixverse-v4.5': 'pixverse/pixverse-v4.5',
     };
 
-    const replicateModel = modelMap[model] || modelMap['stable-video-diffusion'];
+    const replicateModel = modelMap[model] || modelMap['veo-3-fast'];
 
     // Prepare input for Replicate
     let input: any = {};
+    
+    // Normalize duration for each model
+    // veo-3-fast supports: any duration in seconds (default 8)
+    // pixverse-v4.5 supports: 5 or 8 seconds
+    const getPixverseDuration = (d: number) => (d >= 8 ? 8 : 5);
 
     if (job.job_type === 'text_to_video') {
       // For direct text-to-video models (Veo, Pixverse)
-      if (model === 'veo-3-fast' || model === 'pixverse-v4.5') {
+      if (model === 'veo-3-fast') {
         input = {
           prompt: job.prompt,
-          duration: duration, // Valid values: 4, 6, or 8 seconds
+          duration: duration,
+          resolution: '720p', // 720p or 1080p
+          aspect_ratio: '16:9',
+          generate_audio: true,
         };
-        
-        // Add model-specific parameters
-        if (model === 'pixverse-v4.5') {
-          input.resolution = '720p'; // 540p, 720p, or 1080p
-        }
+      } else if (model === 'pixverse-v4.5') {
+        input = {
+          prompt: job.prompt,
+          duration: getPixverseDuration(duration),
+          quality: '540p', // 360p, 540p, 720p, or 1080p
+          aspect_ratio: '16:9',
+          motion_mode: 'normal',
+        };
       } else {
         // Stable Video Diffusion needs an image input
         // We'll first generate an image from the text, then convert to video
@@ -335,13 +347,18 @@ serve(async (req) => {
           prompt: job.prompt,
           image: job.input_image_url,
           duration: duration,
+          resolution: '720p',
+          aspect_ratio: '16:9',
+          generate_audio: true,
         };
       } else if (model === 'pixverse-v4.5') {
         input = {
           prompt: job.prompt,
           image: job.input_image_url,
-          duration: duration,
-          resolution: '720p',
+          duration: getPixverseDuration(duration),
+          quality: '540p', // 360p, 540p, 720p, or 1080p
+          aspect_ratio: '16:9',
+          motion_mode: 'normal',
         };
       } else {
         // Stable Video Diffusion format
