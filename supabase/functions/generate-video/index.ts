@@ -329,13 +329,29 @@ serve(async (req) => {
 
       console.log('Using image-to-video mode with input:', job.input_image_url);
       
-      // All models support image-to-video
-      input = {
-        video: job.input_image_url,
-        sizing_strategy: 'maintain_aspect_ratio',
-        frames_per_second: 6,
-        motion_bucket_id: 127,
-      };
+      // Different models have different input formats
+      if (model === 'veo-3-fast') {
+        input = {
+          prompt: job.prompt,
+          image: job.input_image_url,
+          duration: duration,
+        };
+      } else if (model === 'pixverse-v4.5') {
+        input = {
+          prompt: job.prompt,
+          image: job.input_image_url,
+          duration: duration,
+          resolution: '720p',
+        };
+      } else {
+        // Stable Video Diffusion format
+        input = {
+          video: job.input_image_url,
+          sizing_strategy: 'maintain_aspect_ratio',
+          frames_per_second: 6,
+          motion_bucket_id: 127,
+        };
+      }
     }
 
     console.log('Running Replicate with input:', input);
