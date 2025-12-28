@@ -98,7 +98,7 @@ const Generate = () => {
   const [model, setModel] = useState("flux-schnell");
   const [aspectRatio, setAspectRatio] = useState("16:9");
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [currentConversationId, setCurrentConversationId] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -442,9 +442,17 @@ const Generate = () => {
         toast.error("Please upload an image file");
         return;
       }
-      setUploadedFile(file);
-      toast.success("Image uploaded");
+      setUploadedFiles(prev => [...prev, file]);
+      toast.success(`Image added (${uploadedFiles.length + 1} total)`);
     }
+  };
+
+  const handleRemoveFile = (index: number) => {
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleClearAllFiles = () => {
+    setUploadedFiles([]);
   };
 
   const handleGenerate = async () => {
@@ -507,27 +515,30 @@ const Generate = () => {
 
     try {
       let inputImageUrl = null;
-      if (uploadedFile && user) {
-        const fileName = `${user.id}/${Date.now()}_${uploadedFile.name}`;
-        const { error: uploadError } = await supabase.storage
-          .from("user-uploads")
-          .upload(fileName, uploadedFile);
-        if (uploadError) throw uploadError;
+      if (uploadedFiles.length > 0 && user) {
+        // Upload all files and use the first one as the primary input
+        const uploadedUrls: string[] = [];
+        for (const file of uploadedFiles) {
+          const fileName = `${user.id}/${Date.now()}_${file.name}`;
+          const { error: uploadError } = await supabase.storage
+            .from("user-uploads")
+            .upload(fileName, file);
+          if (uploadError) throw uploadError;
 
-        // user-uploads bucket is private: use a signed URL so external providers (e.g. Replicate)
-        // can fetch the image. Use 24 hours expiry since video generation can take a long time.
-        const { data: signed, error: signedErr } = await supabase.storage
-          .from("user-uploads")
-          .createSignedUrl(fileName, 24 * 60 * 60);
+          const { data: signed, error: signedErr } = await supabase.storage
+            .from("user-uploads")
+            .createSignedUrl(fileName, 24 * 60 * 60);
 
-        if (signedErr || !signed?.signedUrl) {
-          throw signedErr || new Error("Failed to create signed URL for uploaded image");
+          if (signedErr || !signed?.signedUrl) {
+            throw signedErr || new Error("Failed to create signed URL for uploaded image");
+          }
+          uploadedUrls.push(signed.signedUrl);
         }
-
-        inputImageUrl = signed.signedUrl;
+        // Use the first image as the primary input (most providers only support one image)
+        inputImageUrl = uploadedUrls[0];
       }
 
-      const jobType = uploadedFile
+      const jobType = uploadedFiles.length > 0
         ? mode === "video" ? "image_to_video" : "image_to_image"
         : mode === "video" ? "text_to_video" : "text_to_image";
 
@@ -573,7 +584,7 @@ const Generate = () => {
         }
       });
 
-      setUploadedFile(null);
+      setUploadedFiles([]);
     } catch (error: any) {
       toast.error(error.message || "Failed to start generation");
       setIsGenerating(false);
@@ -936,18 +947,18 @@ const Generate = () => {
                       asChild
                       variant="ghost"
                       size="sm"
-                      className={`h-8 text-xs ${uploadedFile ? "bg-primary/20 text-primary" : "bg-muted/50 border border-border/40"}`}
+                      className={`h-8 text-xs ${uploadedFiles.length > 0 ? "bg-primary/20 text-primary" : "bg-muted/50 border border-border/40"}`}
                     >
                       <label htmlFor="upload-image-input" className="cursor-pointer">
                         <Upload className="h-3 w-3 mr-1" />
-                        {uploadedFile ? "Image Added" : "Add Image"}
-                        {uploadedFile && (
+                        {uploadedFiles.length > 0 ? `${uploadedFiles.length} Image${uploadedFiles.length > 1 ? 's' : ''}` : "Add Image"}
+                        {uploadedFiles.length > 0 && (
                           <X
                             className="h-3 w-3 ml-1 hover:text-destructive cursor-pointer"
                             onClick={e => {
                               e.preventDefault();
                               e.stopPropagation();
-                              setUploadedFile(null);
+                              handleClearAllFiles();
                             }}
                           />
                         )}
@@ -1195,18 +1206,18 @@ const Generate = () => {
                 asChild
                 variant="ghost"
                 size="sm"
-                className={`h-8 text-xs ${uploadedFile ? "bg-primary/20 text-primary" : "bg-muted/50 border border-border/40"}`}
+                className={`h-8 text-xs ${uploadedFiles.length > 0 ? "bg-primary/20 text-primary" : "bg-muted/50 border border-border/40"}`}
               >
                 <label htmlFor="upload-image-input" className="cursor-pointer">
                   <Upload className="h-3 w-3 mr-1" />
-                  {uploadedFile ? "Image Added" : "Add Image"}
-                  {uploadedFile && (
+                  {uploadedFiles.length > 0 ? `${uploadedFiles.length} Image${uploadedFiles.length > 1 ? 's' : ''}` : "Add Image"}
+                  {uploadedFiles.length > 0 && (
                     <X
                       className="h-3 w-3 ml-1 hover:text-destructive cursor-pointer"
                       onClick={e => {
                         e.preventDefault();
                         e.stopPropagation();
-                        setUploadedFile(null);
+                        handleClearAllFiles();
                       }}
                     />
                   )}
