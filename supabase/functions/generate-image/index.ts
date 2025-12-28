@@ -1,44 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Replicate from "https://esm.sh/replicate@0.25.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const RUNWAY_API_BASE = 'https://api.dev.runwayml.com/v1';
-const API_VERSION = '2024-11-06';
-
-// Poll task status until complete
-async function pollTaskStatus(taskId: string, apiKey: string, maxAttempts = 120): Promise<any> {
-  for (let i = 0; i < maxAttempts; i++) {
-    const response = await fetch(`${RUNWAY_API_BASE}/tasks/${taskId}`, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'X-Runway-Version': API_VERSION,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to check task status: ${response.status} ${errorText}`);
-    }
-
-    const task = await response.json();
-    console.log(`Task ${taskId} status: ${task.status}`);
-
-    if (task.status === 'SUCCEEDED') {
-      return task;
-    } else if (task.status === 'FAILED') {
-      throw new Error(task.failure || 'Image generation failed');
-    }
-
-    // Wait 2 seconds before polling again
-    await new Promise(resolve => setTimeout(resolve, 2000));
-  }
-
-  throw new Error('Image generation timeout');
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -62,13 +29,14 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const runwayApiKey = Deno.env.get('RUNWAYML_API_SECRET');
+    const replicateApiKey = Deno.env.get('REPLICATE_API_KEY');
     
-    if (!runwayApiKey) {
-      throw new Error('RUNWAYML_API_SECRET is not configured');
+    if (!replicateApiKey) {
+      throw new Error('REPLICATE_API_KEY is not configured');
     }
     
     supabase = createClient(supabaseUrl, supabaseKey);
+    const replicate = new Replicate({ auth: replicateApiKey });
 
     // Verify user from token
     const token = authHeader.replace('Bearer ', '');
@@ -152,103 +120,70 @@ serve(async (req) => {
       .eq('id', jobId);
 
     const metadata = job.metadata || {};
-    const model = metadata.model || 'gen4_image';
-    const aspectRatio = metadata.aspect_ratio || '16:9';
+    const model = metadata.model || 'flux-schnell';
+    const aspectRatio = metadata.aspect_ratio || '1:1';
+    const seed = metadata.seed;
 
-    console.log('Generating image with RunwayML...', { model, aspectRatio, jobType: job.job_type });
+    console.log('Generating image with Replicate...', { model, aspectRatio, jobType: job.job_type });
 
-    // Map aspect ratio to Runway format
-    // Accepted: "1024:1024", "1080:1080", "1168:880", "1360:768", "1440:1080", "1080:1440", 
-    //           "1808:768", "1920:1080", "1080:1920", "2112:912", "1280:720", "720:1280", 
-    //           "720:720", "960:720", "720:960", "1680:720"
-    const ratioMap: Record<string, string> = {
-      '1:1': '1024:1024',
-      '16:9': '1920:1080',
-      '9:16': '1080:1920',
-      '4:3': '1440:1080',
-      '3:4': '1080:1440',
-    };
-    const runwayRatio = ratioMap[aspectRatio] || '1920:1080';
-
-    // Prepare request payload for RunwayML text_to_image
-    const requestPayload: any = {
-      model: model, // gen4_image, gen4_image_turbo, gemini_2.5_flash
-      promptText: job.prompt,
-      ratio: runwayRatio,
+    // Map model to Replicate model ID
+    const modelMap: Record<string, string> = {
+      'flux-schnell': 'black-forest-labs/flux-schnell',
+      'flux-dev': 'black-forest-labs/flux-dev',
+      'flux-pro': 'black-forest-labs/flux-1.1-pro',
+      'stable-diffusion-xl': 'stability-ai/sdxl',
     };
 
-    // Handle image-to-image mode with reference images
+    const replicateModel = modelMap[model] || modelMap['flux-schnell'];
+
+    // Prepare input for Replicate
+    const input: any = {
+      prompt: job.prompt,
+      aspect_ratio: aspectRatio,
+      num_outputs: 1,
+      output_format: 'png',
+      output_quality: 90,
+    };
+
+    // Add seed if provided
+    if (seed) {
+      input.seed = parseInt(seed);
+    }
+
+    // Handle image-to-image mode
     if (job.job_type === 'image_to_image' && job.input_image_url) {
-      console.log('Using image reference mode with input:', job.input_image_url);
-      
-      // Generate a signed URL for the input image since user-uploads bucket is private
-      // Extract the file path from the public URL
-      let imageUri = job.input_image_url;
-      
-      if (job.input_image_url.includes('/storage/v1/object/public/user-uploads/')) {
-        const filePath = job.input_image_url.split('/storage/v1/object/public/user-uploads/')[1];
-        console.log('Generating signed URL for:', filePath);
-        
-        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-          .from('user-uploads')
-          .createSignedUrl(filePath, 3600); // 1 hour expiry
-        
-        if (signedUrlError) {
-          console.error('Failed to create signed URL:', signedUrlError);
-          throw new Error('Failed to access input image');
-        }
-        
-        imageUri = signedUrlData.signedUrl;
-        console.log('Using signed URL for RunwayML');
-      }
-      
-      requestPayload.referenceImages = [
-        { uri: imageUri, tag: 'reference' }
-      ];
+      console.log('Using image-to-image mode with input:', job.input_image_url);
+      input.image = job.input_image_url;
+      input.prompt_strength = 0.8; // How much to transform the input image
     }
 
-    console.log('RunwayML request payload:', JSON.stringify(requestPayload));
-
-    // Create image generation task
-    const createResponse = await fetch(`${RUNWAY_API_BASE}/text_to_image`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${runwayApiKey}`,
-        'X-Runway-Version': API_VERSION,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestPayload),
-    });
-
-    if (!createResponse.ok) {
-      const errorText = await createResponse.text();
-      console.error('RunwayML API error:', createResponse.status, errorText);
-      
-      if (createResponse.status === 402) {
-        throw new Error('Insufficient RunwayML credits. Please add credits to your RunwayML account.');
+    // Generate image using Replicate
+    let output: any;
+    try {
+      output = await replicate.run(replicateModel, { input }) as any;
+    } catch (replicateError: any) {
+      // Handle Replicate-specific errors
+      if (replicateError.message?.includes('402') || replicateError.message?.includes('Insufficient credit')) {
+        throw new Error('Insufficient Replicate credits. Please add credits to your Replicate account at https://replicate.com/account/billing');
       }
-      if (createResponse.status === 429) {
-        throw new Error('RunwayML rate limit exceeded. Please try again later.');
+      if (replicateError.message?.includes('429') || replicateError.message?.includes('Too Many Requests') || replicateError.message?.includes('throttled')) {
+        throw new Error('Replicate rate limit exceeded. Please add more credits to your Replicate account to increase your rate limit at https://replicate.com/account/billing');
       }
-      
-      throw new Error(`RunwayML API error: ${createResponse.status} ${errorText}`);
+      throw replicateError;
     }
 
-    const createData = await createResponse.json();
-    const taskId = createData.id;
-    console.log('RunwayML task created:', taskId);
+    console.log('Replicate output:', output);
 
-    // Poll for completion
-    const completedTask = await pollTaskStatus(taskId, runwayApiKey);
-    
-    // Get the output URL
+    // Handle output (can be array or single URL)
     let imageUrl: string;
-    if (completedTask.output && completedTask.output.length > 0) {
-      imageUrl = completedTask.output[0];
-    } else if (completedTask.artifacts && completedTask.artifacts.length > 0) {
-      imageUrl = completedTask.artifacts[0].url || completedTask.artifacts[0].uri;
+    if (Array.isArray(output)) {
+      imageUrl = output[0];
+    } else if (typeof output === 'string') {
+      imageUrl = output;
+    } else if (output?.url) {
+      imageUrl = output.url;
     } else {
-      throw new Error('No output from RunwayML');
+      throw new Error('Unexpected output format from Replicate');
     }
 
     console.log('Image generated, downloading from:', imageUrl);
@@ -308,10 +243,11 @@ serve(async (req) => {
         generation_type: 'image',
         prompt: job.prompt,
         result_url: finalUrl,
-        provider: 'runwayml',
+        provider: 'replicate',
         metadata: { 
-          model: model,
+          model: replicateModel,
           aspect_ratio: aspectRatio,
+          seed: seed || null,
         },
       });
 
@@ -328,11 +264,17 @@ serve(async (req) => {
     if (creditsDeducted && supabase && job) {
       try {
         console.log('Refunding credits due to job failure:', job.cost_credits);
+        await supabase
+          .from('credits')
+          .update({
+            balance: supabase.sql`balance + ${job.cost_credits}`,
+          })
+          .eq('user_id', job.user_id);
         
-        // Refund by calling with negative amount
+        // Use raw SQL for atomic increment
         await supabase.rpc('deduct_credits', { 
           p_user_id: job.user_id, 
-          p_amount: -job.cost_credits
+          p_amount: -job.cost_credits // Negative to refund
         });
 
         await supabase

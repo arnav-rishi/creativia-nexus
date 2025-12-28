@@ -1,49 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import Replicate from "https://esm.sh/replicate@0.25.2";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
-
-const RUNWAY_API_BASE = 'https://api.dev.runwayml.com/v1';
-const API_VERSION = '2024-11-06';
-
-// Models that support text-to-video
-const TEXT_TO_VIDEO_MODELS = ['veo3.1', 'veo3.1_fast', 'veo3'];
-// Models that support image-to-video
-const IMAGE_TO_VIDEO_MODELS = ['gen4_turbo', 'veo3.1', 'gen3a_turbo', 'veo3.1_fast', 'veo3'];
-
-// Poll task status until complete
-async function pollTaskStatus(taskId: string, apiKey: string, maxAttempts = 180): Promise<any> {
-  for (let i = 0; i < maxAttempts; i++) {
-    const response = await fetch(`${RUNWAY_API_BASE}/tasks/${taskId}`, {
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'X-Runway-Version': API_VERSION,
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to check task status: ${response.status} ${errorText}`);
-    }
-
-    const task = await response.json();
-    console.log(`Task ${taskId} status: ${task.status}`);
-
-    if (task.status === 'SUCCEEDED') {
-      return task;
-    } else if (task.status === 'FAILED') {
-      throw new Error(task.failure || 'Video generation failed');
-    }
-
-    // Wait 3 seconds before polling again (video takes longer)
-    await new Promise(resolve => setTimeout(resolve, 3000));
-  }
-
-  throw new Error('Video generation timeout');
-}
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -67,13 +29,15 @@ serve(async (req) => {
 
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
-    const runwayApiKey = Deno.env.get('RUNWAYML_API_SECRET');
-    
-    if (!runwayApiKey) {
-      throw new Error('RUNWAYML_API_SECRET is not configured');
-    }
+    const replicateApiKey = Deno.env.get('REPLICATE_API_KEY');
+    const openAiApiKey = Deno.env.get('OPENAI_API_KEY');
     
     supabase = createClient(supabaseUrl, supabaseKey);
+    let replicate;
+    
+    if (replicateApiKey) {
+      replicate = new Replicate({ auth: replicateApiKey });
+    }
 
     // Verify user from token
     const token = authHeader.replace('Bearer ', '');
@@ -157,132 +121,251 @@ serve(async (req) => {
       .eq('id', jobId);
 
     const metadata = job.metadata || {};
-    let model = metadata.model || 'veo3.1';
-    const duration = metadata.duration || 5;
-    const aspectRatio = metadata.aspect_ratio || '16:9';
-    const isImageToVideo = job.job_type === 'image_to_video' && job.input_image_url;
+    const model = metadata.model || 'stable-video-diffusion';
+    const duration = metadata.duration || 8; // Default to 8 seconds
+    const provider = model.startsWith('sora-') ? 'openai' : 'replicate';
 
-    console.log('Generating video with RunwayML...', { model, duration, jobType: job.job_type, isImageToVideo });
+    console.log('Generating video...', { model, jobType: job.job_type, provider });
 
-    // Validate model for job type
-    if (isImageToVideo) {
-      if (!IMAGE_TO_VIDEO_MODELS.includes(model)) {
-        console.log(`Model ${model} not supported for image-to-video, using gen4_turbo`);
-        model = 'gen4_turbo';
+    // Handle OpenAI Sora models
+    if (provider === 'openai') {
+      if (!openAiApiKey) {
+        throw new Error('OPENAI_API_KEY is not configured');
       }
-    } else {
-      if (!TEXT_TO_VIDEO_MODELS.includes(model)) {
-        console.log(`Model ${model} not supported for text-to-video, using veo3.1`);
-        model = 'veo3.1';
+
+      // Create video with Sora
+      const createResponse = await fetch('https://api.openai.com/v1/videos', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${openAiApiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: model,
+          prompt: job.prompt,
+          size: '1280x720',
+          seconds: String(duration),
+        }),
+      });
+
+      if (!createResponse.ok) {
+        const errorText = await createResponse.text();
+        console.error('Sora API error:', createResponse.status, errorText);
+        throw new Error(`Sora API error: ${createResponse.status} ${errorText}`);
       }
-    }
 
-    // Map aspect ratio to Runway format based on endpoint
-    // Image-to-video ratios: "1280:720", "720:1280", "1104:832", "832:1104", "960:960", "1584:672"
-    // Text-to-video ratios: "1280:720", "720:1280", "1080:1920", "1920:1080"
-    const imageToVideoRatioMap: Record<string, string> = {
-      '1:1': '960:960',
-      '16:9': '1280:720',
-      '9:16': '720:1280',
-    };
-    const textToVideoRatioMap: Record<string, string> = {
-      '1:1': '1280:720', // No 1:1 for text-to-video, default to 16:9
-      '16:9': '1280:720',
-      '9:16': '720:1280',
-    };
+      const createData = await createResponse.json();
+      const videoId = createData.id;
+      console.log('Sora video job created:', videoId);
 
-    let endpoint: string;
-    let requestPayload: any;
+      // Poll for completion
+      let videoUrl: string | null = null;
+      let attempts = 0;
+      const maxAttempts = 60; // 5 minutes max
 
-    if (isImageToVideo) {
-      // Image to Video endpoint
-      const runwayRatio = imageToVideoRatioMap[aspectRatio] || '1280:720';
-      console.log('Using image_to_video mode with input:', job.input_image_url);
-      
-      // Generate a signed URL for the input image since user-uploads bucket is private
-      let imageUri = job.input_image_url;
-      
-      if (job.input_image_url.includes('/storage/v1/object/public/user-uploads/')) {
-        const filePath = job.input_image_url.split('/storage/v1/object/public/user-uploads/')[1];
-        console.log('Generating signed URL for:', filePath);
+      while (!videoUrl && attempts < maxAttempts) {
+        await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds
         
-        const { data: signedUrlData, error: signedUrlError } = await supabase.storage
-          .from('user-uploads')
-          .createSignedUrl(filePath, 3600); // 1 hour expiry
-        
-        if (signedUrlError) {
-          console.error('Failed to create signed URL:', signedUrlError);
-          throw new Error('Failed to access input image');
+        const statusResponse = await fetch(`https://api.openai.com/v1/videos/${videoId}`, {
+          headers: {
+            'Authorization': `Bearer ${openAiApiKey}`,
+          },
+        });
+
+        if (!statusResponse.ok) {
+          throw new Error('Failed to check Sora video status');
         }
+
+        const statusData = await statusResponse.json();
+        console.log('Sora video status:', statusData.status);
+
+        if (statusData.status === 'completed') {
+          // Download the video
+          const downloadResponse = await fetch(`https://api.openai.com/v1/videos/${videoId}/content`, {
+            headers: {
+              'Authorization': `Bearer ${openAiApiKey}`,
+            },
+          });
+
+          if (!downloadResponse.ok) {
+            throw new Error('Failed to download Sora video');
+          }
+
+          const videoBlob = await downloadResponse.blob();
+          const fileName = `${job.user_id}/${jobId}_${Date.now()}.mp4`;
+          const arrayBuffer = await videoBlob.arrayBuffer();
+          const uint8Array = new Uint8Array(arrayBuffer);
+          
+          const { error: uploadError } = await supabase.storage
+            .from('generations')
+            .upload(fileName, uint8Array, {
+              contentType: 'video/mp4',
+            });
+
+          if (uploadError) {
+            console.error('Upload error:', uploadError);
+            throw uploadError;
+          }
+
+          const { data: signedData } = await supabase.storage
+            .from('generations')
+            .createSignedUrl(fileName, 31536000);
+
+          videoUrl = signedData?.signedUrl || null;
+          if (!videoUrl) {
+            throw new Error('Failed to create signed URL');
+          }
+          break;
+        } else if (statusData.status === 'failed') {
+          const errorDetails = statusData.error ? JSON.stringify(statusData.error) : 'Unknown error';
+          throw new Error(`Sora video generation failed: ${errorDetails}`);
+        }
+
+        attempts++;
+      }
+
+      if (!videoUrl) {
+        throw new Error('Video generation timeout');
+      }
+
+      // Update job with result
+      await supabase
+        .from('jobs')
+        .update({
+          status: 'completed',
+          result_url: videoUrl,
+        })
+        .eq('id', jobId);
+
+      // Create generation record
+      await supabase
+        .from('generations')
+        .insert({
+          user_id: job.user_id,
+          job_id: jobId,
+          generation_type: 'video',
+          prompt: job.prompt,
+          result_url: videoUrl,
+          provider: 'openai',
+          metadata: { 
+            model: model,
+          },
+        });
+
+      console.log('Sora video job completed successfully');
+
+      return new Response(
+        JSON.stringify({ success: true, resultUrl: videoUrl }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
+    // Handle Replicate models
+    if (!replicateApiKey || !replicate) {
+      throw new Error('REPLICATE_API_KEY is not configured');
+    }
+
+    // Map model to Replicate model ID
+    const modelMap: Record<string, string> = {
+      'stable-video-diffusion': 'stability-ai/stable-video-diffusion-img2vid-xt',
+      'veo-3-fast': 'google/veo-3-fast',
+      'pixverse-v4.5': 'pixverse/pixverse-v4.5',
+    };
+
+    const replicateModel = modelMap[model] || modelMap['stable-video-diffusion'];
+
+    // Prepare input for Replicate
+    let input: any = {};
+
+    if (job.job_type === 'text_to_video') {
+      // For direct text-to-video models (Veo, Pixverse)
+      if (model === 'veo-3-fast' || model === 'pixverse-v4.5') {
+        input = {
+          prompt: job.prompt,
+          duration: duration, // Valid values: 4, 6, or 8 seconds
+        };
         
-        imageUri = signedUrlData.signedUrl;
-        console.log('Using signed URL for RunwayML');
+        // Add model-specific parameters
+        if (model === 'pixverse-v4.5') {
+          input.resolution = '720p'; // 540p, 720p, or 1080p
+        }
+      } else {
+        // Stable Video Diffusion needs an image input
+        // We'll first generate an image from the text, then convert to video
+        console.log('Text-to-video: First generating image from prompt...');
+        
+        let imageOutput: any;
+        try {
+          imageOutput = await replicate.run('black-forest-labs/flux-schnell', {
+            input: {
+              prompt: job.prompt,
+              num_outputs: 1,
+            }
+          }) as any;
+        } catch (replicateError: any) {
+          if (replicateError.message?.includes('402') || replicateError.message?.includes('Insufficient credit')) {
+            throw new Error('Insufficient Replicate credits. Please add credits to your Replicate account at https://replicate.com/account/billing');
+          }
+          if (replicateError.message?.includes('429') || replicateError.message?.includes('Too Many Requests') || replicateError.message?.includes('throttled')) {
+            throw new Error('Replicate rate limit exceeded. Please add more credits to your Replicate account to increase your rate limit at https://replicate.com/account/billing');
+          }
+          throw replicateError;
+        }
+
+        const imageUrl = Array.isArray(imageOutput) ? imageOutput[0] : imageOutput;
+        
+        input = {
+          video: imageUrl,
+          sizing_strategy: 'maintain_aspect_ratio',
+          frames_per_second: 6,
+          motion_bucket_id: 127,
+        };
       }
+    } else if (job.job_type === 'image_to_video') {
+      // Image-to-video
+      if (!job.input_image_url) {
+        throw new Error('Input image URL is required for image-to-video');
+      }
+
+      console.log('Using image-to-video mode with input:', job.input_image_url);
       
-      endpoint = `${RUNWAY_API_BASE}/image_to_video`;
-      requestPayload = {
-        model: model,
-        promptImage: imageUri,
-        promptText: job.prompt,
-        ratio: runwayRatio,
-        duration: Math.min(Math.max(duration, 2), 10), // 2-10 seconds for image-to-video
-      };
-    } else {
-      // Text to Video endpoint
-      const runwayRatio = textToVideoRatioMap[aspectRatio] || '1280:720';
-      
-      endpoint = `${RUNWAY_API_BASE}/text_to_video`;
-      requestPayload = {
-        model: model,
-        promptText: job.prompt,
-        ratio: runwayRatio,
-        duration: [4, 6, 8].includes(duration) ? duration : 8, // Only 4, 6, 8 allowed for text-to-video
-        audio: true, // Include audio generation
+      // All models support image-to-video
+      input = {
+        video: job.input_image_url,
+        sizing_strategy: 'maintain_aspect_ratio',
+        frames_per_second: 6,
+        motion_bucket_id: 127,
       };
     }
 
-    console.log('RunwayML request:', endpoint, JSON.stringify(requestPayload));
+    console.log('Running Replicate with input:', input);
 
-    // Create video generation task
-    const createResponse = await fetch(endpoint, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${runwayApiKey}`,
-        'X-Runway-Version': API_VERSION,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(requestPayload),
-    });
-
-    if (!createResponse.ok) {
-      const errorText = await createResponse.text();
-      console.error('RunwayML API error:', createResponse.status, errorText);
-      
-      if (createResponse.status === 402) {
-        throw new Error('Insufficient RunwayML credits. Please add credits to your RunwayML account.');
+    // Generate video using Replicate
+    let output: any;
+    try {
+      output = await replicate.run(replicateModel, { input }) as any;
+    } catch (replicateError: any) {
+      if (replicateError.message?.includes('402') || replicateError.message?.includes('Insufficient credit')) {
+        throw new Error('Insufficient Replicate credits. Please add credits to your Replicate account at https://replicate.com/account/billing');
       }
-      if (createResponse.status === 429) {
-        throw new Error('RunwayML rate limit exceeded. Please try again later.');
+      if (replicateError.message?.includes('429') || replicateError.message?.includes('Too Many Requests') || replicateError.message?.includes('throttled')) {
+        throw new Error('Replicate rate limit exceeded. Please add more credits to your Replicate account to increase your rate limit at https://replicate.com/account/billing');
       }
-      
-      throw new Error(`RunwayML API error: ${createResponse.status} ${errorText}`);
+      throw replicateError;
     }
 
-    const createData = await createResponse.json();
-    const taskId = createData.id;
-    console.log('RunwayML video task created:', taskId);
+    console.log('Replicate video output:', output);
 
-    // Poll for completion (video takes longer, increase max attempts)
-    const completedTask = await pollTaskStatus(taskId, runwayApiKey, 180);
-    
-    // Get the output URL
+    // Handle output (can be array or single URL)
     let videoUrl: string;
-    if (completedTask.output && completedTask.output.length > 0) {
-      videoUrl = completedTask.output[0];
-    } else if (completedTask.artifacts && completedTask.artifacts.length > 0) {
-      videoUrl = completedTask.artifacts[0].url || completedTask.artifacts[0].uri;
+    if (Array.isArray(output)) {
+      videoUrl = output[0];
+    } else if (typeof output === 'string') {
+      videoUrl = output;
+    } else if (output?.url) {
+      videoUrl = output.url;
     } else {
-      throw new Error('No output from RunwayML');
+      throw new Error('Unexpected output format from Replicate');
     }
 
     console.log('Video generated, downloading from:', videoUrl);
@@ -342,11 +425,9 @@ serve(async (req) => {
         generation_type: 'video',
         prompt: job.prompt,
         result_url: finalUrl,
-        provider: 'runwayml',
+        provider: 'replicate',
         metadata: { 
-          model: model,
-          duration: duration,
-          aspect_ratio: aspectRatio,
+          model: replicateModel,
         },
       });
 

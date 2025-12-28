@@ -10,42 +10,38 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from "@/components/ui/resizable";
-// RunwayML Image models
+// Image models
 const IMAGE_MODELS = [{
-  value: "gen4_image",
-  label: "Gen-4 Image",
-  desc: "High Quality"
+  value: "flux-schnell",
+  label: "Flux Schnell",
+  desc: "Fast & High Quality"
 }, {
-  value: "gen4_image_turbo",
-  label: "Gen-4 Image Turbo",
-  desc: "Fast"
+  value: "flux-dev",
+  label: "Flux Dev",
+  desc: "Slower, Higher Quality"
 }, {
-  value: "gemini_2.5_flash",
-  label: "Gemini 2.5 Flash",
-  desc: "Google AI"
+  value: "flux-pro",
+  label: "Flux Pro",
+  desc: "Best Quality"
 }];
 
-// RunwayML Video models - different models for text-to-video vs image-to-video
+// Video models
 const VIDEO_MODELS = [{
-  value: "veo3.1",
-  label: "Veo 3.1",
-  desc: "Text-to-Video - Best"
+  value: "sora-2",
+  label: "Sora 2",
+  desc: "OpenAI - Fast"
 }, {
-  value: "veo3.1_fast",
-  label: "Veo 3.1 Fast",
-  desc: "Text-to-Video - Fast"
+  value: "sora-2-pro",
+  label: "Sora 2 Pro",
+  desc: "OpenAI - High Quality"
 }, {
-  value: "veo3",
-  label: "Veo 3",
-  desc: "Text-to-Video"
+  value: "veo-3-fast",
+  label: "Veo 3 Fast",
+  desc: "Google - Fast"
 }, {
-  value: "gen4_turbo",
-  label: "Gen-4 Turbo",
-  desc: "Image-to-Video"
-}, {
-  value: "gen3a_turbo",
-  label: "Gen-3a Turbo",
-  desc: "Image-to-Video - Fast"
+  value: "pixverse-v4.5",
+  label: "Pixverse V4.5",
+  desc: "High Quality"
 }];
 
 const ASPECT_RATIOS = [{
@@ -59,8 +55,7 @@ const ASPECT_RATIOS = [{
   label: "9:16"
 }];
 
-// RunwayML pricing: gen4_turbo video = 5 credits/sec, gen4_image = 5 credits
-const VIDEO_COST = 25; // 5 seconds * 5 credits
+const VIDEO_COST = 10;
 const IMAGE_COST = 5;
 
 interface ChatMessage {
@@ -142,9 +137,9 @@ const Generate = () => {
 
   useEffect(() => {
     if (mode === "image") {
-      setModel("gen4_image");
+      setModel("flux-schnell");
     } else {
-      setModel("veo3.1"); // Default to veo3.1 for text-to-video
+      setModel("veo-3-fast");
     }
   }, [mode]);
 
@@ -533,13 +528,13 @@ const Generate = () => {
         job_type: jobType,
         prompt: userMessage.content,
         input_image_url: inputImageUrl,
-        provider: "runwayml",
+        provider: "replicate",
         cost_credits: getCreditCost(),
         status: "pending",
         metadata: {
           model,
           aspect_ratio: aspectRatio,
-          duration: mode === "video" ? 5 : null
+          duration: mode === "video" ? 8 : null
         }
       }).select().single();
 
