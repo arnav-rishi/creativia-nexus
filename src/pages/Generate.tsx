@@ -27,21 +27,21 @@ const IMAGE_MODELS = [{
 
 // Video models
 const VIDEO_MODELS = [{
-  value: "sora-2",
-  label: "Sora 2",
-  desc: "OpenAI - Fast"
-}, {
-  value: "sora-2-pro",
-  label: "Sora 2 Pro",
-  desc: "OpenAI - High Quality"
-}, {
   value: "veo-3-fast",
-  label: "Veo 3 Fast",
-  desc: "Google - Fast"
+  label: "Veo 3.1 Fast",
+  desc: "Google - Fast & High Quality"
 }, {
   value: "pixverse-v4.5",
   label: "Pixverse V4.5",
-  desc: "High Quality"
+  desc: "High Quality Video"
+}, {
+  value: "sora-2",
+  label: "Sora 2",
+  desc: "OpenAI - Coming Soon"
+}, {
+  value: "sora-2-pro",
+  label: "Sora 2 Pro",
+  desc: "OpenAI - Coming Soon"
 }];
 
 const ASPECT_RATIOS = [{
